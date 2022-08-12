@@ -141,7 +141,7 @@ class WRF_wrapper:
         os.chdir(os.path.join(self.working_directory, 'WRF/test/em_real'))
         subprocess.check_call(f"ln -sf {self.working_directory}/WPS/met_em.d* .", shell=True)
 
-        if self.config_dict['wind_turbines']:
+        if self.config_dict['wind_farms']:
             #turbine_df.to_csv(path_name + '/WRF/test/em_real/windturbines.txt', sep = ' ', header = False, index = False)
             raise NotImplementedError
 
