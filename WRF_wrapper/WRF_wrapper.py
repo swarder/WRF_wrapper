@@ -35,6 +35,11 @@ class WRF_wrapper:
         interval = self.config_dict['interval_seconds']
         self.model_timestamps = [sd + datetime.timedelta(seconds=i*interval) for i in range(int((ed - sd).total_seconds() / interval)+1)]
 
+        # Check which PFILEs already exist - new data won't need to be downloaded for these, even if the GRB files don't exist any more
+        existing_pfile_names = os.listdir(self.config_dict['pfile_data_dir'])
+        model_pfile_names = [ts.strftime('FILE:%Y-%m-%D_%H') for ts in self.model_timestamps]
+        self.model_timestamps_without_pfiles = [ts for ts in self.model_timestamps if ts.strftime('FILE:%Y-%m-%D_%H') not in existing_pfile_names]
+
     def save_WPS_config_to_file(self, filename=None):
         """
         Save WPS config file to specified filename
@@ -96,21 +101,25 @@ class WRF_wrapper:
     def download_era(self):
         """
         Download ERA data required for specified run
+        Only downloads timestamps for which we haven't already generated PFILEs
         Additional checks are performed in era_downloader to remove unnecessary downloads
         """
         downloader = era_downloader.era_downloader(data_dir=self.config_dict['era_data_dir'])
-        downloader.download_datetimes(self.model_timestamps)
+        print('Attempting to download ERA data for the following timestamps:', self.model_timestamps_without_pfiles)
+        downloader.download_datetimes(self.model_timestamps_without_pfiles)
 
     def run_link_grib(self):
         """
         Run link_grib.csh within singularity container
+        Only runs for PFILEs we haven't already generated
         """
         print('Running link_grib')
         os.chdir(os.path.join(self.working_directory, 'WPS'))
         st = os.stat('link_grib.csh')
         os.chmod('link_grib.csh', st.st_mode | stat.S_IEXEC)
         # We only want to link the grb files we need
-        grb_files = [self.config_dict['era_data_dir'] + t.strftime('/ERA5_%Y%m%d_%H%M.grb') for t in self.model_timestamps]
+        grb_files = [self.config_dict['era_data_dir'] + t.strftime('/ERA5_%Y%m%d_%H%M.grb') for t in self.model_timestamps_without_pfiles]
+        print('Running ungrib for the following timestamps:', self.model_timestamps_without_pfiles)
         subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.config_dict['era_data_dir']},$TMPDIR:$TMPDIR {self.config_dict['wrf_img_path']} ./link_grib.csh {' '.join(grb_files)}", shell=True)
 
     def run_ungrib(self):
@@ -140,10 +149,6 @@ class WRF_wrapper:
         print('Running real.exe')
         os.chdir(os.path.join(self.working_directory, 'WRF/test/em_real'))
         subprocess.check_call(f"ln -sf {self.working_directory}/WPS/met_em.d* .", shell=True)
-
-        if self.config_dict['wind_farms']:
-            #turbine_df.to_csv(path_name + '/WRF/test/em_real/windturbines.txt', sep = ' ', header = False, index = False)
-            raise NotImplementedError
 
         st = os.stat('real.exe')
         os.chmod('real.exe', st.st_mode | stat.S_IEXEC)
