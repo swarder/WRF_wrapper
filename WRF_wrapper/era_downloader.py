@@ -12,6 +12,7 @@ import cdsapi
 from cdo import *
 c = cdsapi.Client()
 import numpy as np
+import time
 
 plfn = "ERA5_pl_"
 sffn = "ERA5_sfc_"
@@ -65,7 +66,7 @@ def download_day(day, times):
         plfn+dayfns+".grb")
 
 def get_and_split_day(date, times, data_dir):
-    tempdir = data_dir + str(date) + '_temp' + '/'
+    tempdir = data_dir + str(date) + '_temp_' + str(time.time()).replace(',', '') + '/'
     os.makedirs(tempdir, exist_ok=True)
     os.chdir(tempdir)
     print( "+++++++++++++++++ ERA-5 +++++++++++++++++++")
@@ -102,8 +103,10 @@ class era_downloader:
         """
         Take a list of datetimes and download all data
         """
+        print('ERA data requested for following timestamps:', datetimes)
         # First filter datetimes for ones which aren't already downloaded
         datetimes = [d for d in datetimes if not os.path.exists(os.path.join(self.data_dir, d.strftime('ERA5_%Y%m%d_%H%M.grb')))]
+        print('Remaining timestamps after removing those for which we already have ERA data (in GRB format):', datetimes)
 
         if len(datetimes) == 0:
             print('All data already downloaded')
