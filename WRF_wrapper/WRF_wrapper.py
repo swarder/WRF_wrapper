@@ -61,10 +61,6 @@ class WRF_wrapper:
         """
         Set up directory structure and copy files
         """
-        # Download ERA data (additional checks are performed in era_downloader to remove unnecessary downloads)
-        downloader = era_downloader.era_downloader(data_dir=self.config_dict['era_data_dir'])
-        downloader.download_datetimes(self.model_timestamps)
-
         # Create working directory and copy in template WPS and WRF directories
         os.makedirs(self.working_directory, exist_ok=True)
         try:
@@ -83,8 +79,9 @@ class WRF_wrapper:
         self.save_WRF_config_to_file()
 
         # Combine wind farms and save wind turbine file
-        all_farms = sum(self.config_dict['wind_farms'])
-        all_farms.save(os.path.join(self.working_directory, 'WRF/test/em_real/'))
+        if self.config_dict['wind_farms']:
+            all_farms = sum(self.config_dict['wind_farms'])
+            all_farms.save(os.path.join(self.working_directory, 'WRF/test/em_real/'))
 
     def run_geogrid(self):
         """
@@ -95,6 +92,14 @@ class WRF_wrapper:
         st = os.stat('geogrid.exe')
         os.chmod('geogrid.exe', st.st_mode | stat.S_IEXEC)
         subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.config_dict['geog_data_path']},$TMPDIR:$TMPDIR {self.config_dict['wrf_img_path']} ./geogrid.exe > geogrid.out", shell=True)
+
+    def download_era(self):
+        """
+        Download ERA data required for specified run
+        Additional checks are performed in era_downloader to remove unnecessary downloads
+        """
+        downloader = era_downloader.era_downloader(data_dir=self.config_dict['era_data_dir'])
+        downloader.download_datetimes(self.model_timestamps)
 
     def run_link_grib(self):
         """

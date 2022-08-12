@@ -20,6 +20,7 @@ wrf = WRF_wrapper(working_directory, config_dict)
 
 wrf.initialise()
 wrf.run_geogrid()
+wrf.download_era()
 wrf.run_link_grib()
 wrf.run_ungrib()
 wrf.run_metgrid()
