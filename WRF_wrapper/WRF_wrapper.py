@@ -9,7 +9,7 @@ import subprocess
 import datetime
 
 config_defaults = {'interval_seconds': 10800,
-                   'wind_turbines': None,
+                   'wind_farms': None,
                    }
 
 class WRF_wrapper:
