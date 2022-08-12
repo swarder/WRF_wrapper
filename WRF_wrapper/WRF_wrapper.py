@@ -37,8 +37,7 @@ class WRF_wrapper:
 
         # Check which PFILEs already exist - new data won't need to be downloaded for these, even if the GRB files don't exist any more
         existing_pfile_names = os.listdir(self.config_dict['pfile_data_dir'])
-        model_pfile_names = [ts.strftime('FILE:%Y-%m-%D_%H') for ts in self.model_timestamps]
-        self.model_timestamps_without_pfiles = [ts for ts in self.model_timestamps if ts.strftime('FILE:%Y-%m-%D_%H') not in existing_pfile_names]
+        self.model_timestamps_without_pfiles = [ts for ts in self.model_timestamps if ts.strftime('FILE:%Y-%m-%d_%H') not in existing_pfile_names]
 
     def save_WPS_config_to_file(self, filename=None):
         """
