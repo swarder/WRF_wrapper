@@ -100,7 +100,7 @@ template = \
     maxens3 = 16,
     ensdim = 144,
     sf_urban_physics = 0, 0, 0, 0,
-    windfarm_opt = 0, {wind_turbines_int},
+    windfarm_opt = {wind_turbines_int}, {wind_turbines_int},
 /
 
 &fdda
