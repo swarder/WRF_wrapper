@@ -191,3 +191,6 @@ class WRF_wrapper:
 
             din.close()
             dout.close()
+
+        if self.config_dict['wind_farms']:
+            shutil.copy(os.path.join(self.working_directory, f'WRF/test/em_real/windturbines.txt'), os.path.join(out_path, 'windturbines.txt'))
