@@ -7,6 +7,8 @@ import os
 import stat
 import subprocess
 import datetime
+import glob
+from netCDF4 import Dataset
 
 config_defaults = {'interval_seconds': 10800,
                    'wind_farms': None,
@@ -162,3 +164,30 @@ class WRF_wrapper:
         st = os.stat('wrf.exe')
         os.chmod('wrf.exe', st.st_mode | stat.S_IEXEC)
         subprocess.check_call(f"singularity run {self.config_dict['wrf_img_path']} ./wrf.exe > wrf.out", shell=True)
+
+    def extract_outputs(self, out_path, variables_list=['U', 'V', 'TKE_PBL', 'POWER']):
+        """
+        Extract specified variables and save each field in a newly generated netcdf file for each domain
+        """
+        # Remove POWER variable if no wind farms
+        if 'POWER' in variables_list and self.config_dict['wind_farms'] is None:
+            del variables_list[variables_list.index('POWER')]
+
+        os.makedirs(out_path, exist_ok=True)
+
+        for dom in [1, 2]:
+            dout = Dataset(os.path.join(out_path, f'out_d_0{dom}.nc'), 'w', format='NETCDF4')
+            din = Dataset(os.path.join(self.working_directory, f'WRF/test/em_real/wrfout_d0{dom}'))
+
+            dout.setncatts(din.__dict__)
+            for name, dimension in din.dimensions.items():
+                dout.createDimension(name, (len(dimension) if not dimension.isunlimited() else None))
+
+            for name, variable in din.variables.items():
+                if name in variables_list or name in ['XLAT', 'XLONG']:
+                    x = dout.createVariable(name, variable.datatype, variable.dimensions)
+                    dout[name][:] = din[name][:]
+                    dout[name].setncatts(din[name].__dict__)
+
+            din.close()
+            dout.close()
