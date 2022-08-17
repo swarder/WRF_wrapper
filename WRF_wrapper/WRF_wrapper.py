@@ -153,7 +153,7 @@ class WRF_wrapper:
 
         st = os.stat('real.exe')
         os.chmod('real.exe', st.st_mode | stat.S_IEXEC)
-        subprocess.check_call(f"singularity exec -H {os.getcwd()} {self.config_dict['wrf_img_path']} ./real.exe > real.out", shell=True)
+        subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./real.exe > real.out", shell=True)
 
     def run_wrf(self):
         """
@@ -163,7 +163,7 @@ class WRF_wrapper:
         os.chdir(os.path.join(self.working_directory, 'WRF/test/em_real'))
         st = os.stat('wrf.exe')
         os.chmod('wrf.exe', st.st_mode | stat.S_IEXEC)
-        subprocess.check_call(f"singularity exec -H {os.getcwd()} {self.config_dict['wrf_img_path']} ./wrf.exe > wrf.out", shell=True)
+        subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./wrf.exe > wrf.out", shell=True)
 
     def extract_outputs(self, out_path, variables_list=['U', 'V', 'TKE_PBL', 'POWER']):
         """
