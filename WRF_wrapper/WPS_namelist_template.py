@@ -18,11 +18,11 @@ template = \
  dx = 16668,
  dy = 16668,
  map_proj = 'lambert',
- ref_lat   =  61,
- ref_lon   = 0,
- truelat1  =  60.6,
- truelat2  =  62.6,
- stand_lon = -1.0,
+ ref_lat   =  55.5,
+ ref_lon   = 6,
+ truelat1  =  54,
+ truelat2  =  56,
+ stand_lon = 8.0,
  geog_data_path = '{geog_data_path}'
 /
 
