@@ -27,7 +27,7 @@ class WindTurbine:
 
     @classmethod
     def from_type_id(cls, type_id):
-        tbl_file = os.path.join(DATA_PATH, f'wind-turbine-{type_id}.tbl')
+        tbl_file = os.path.join(DATA_PATH, f'power_curves/wind-turbine-{type_id}.tbl')
         return cls(tbl_file)
 
 
@@ -47,7 +47,7 @@ class WindFarm:
         or template_id, which corresponds to a pre-defined template
         """
         if template_file is None:
-            template_file = os.path.join(DATA_PATH, f'farm_template_{template_id}.txt')
+            template_file = os.path.join(DATA_PATH, f'templates/farm_template_{template_id}.txt')
         farm_df = pd.read_csv(template_file, names=['lat', 'lon', 'type_id'], delimiter=' ')
         farm_df['lat'] = farm_df['lat'] - farm_df['lat'].mean() + farm_lat
         farm_df['lon'] = farm_df['lon'] - farm_df['lon'].mean() + farm_lon
@@ -108,4 +108,4 @@ class WindFarm:
         # Copy relevant .tbl (power curve) files into wrf run directory
         used_turbine_types = self.farm_df.type_id.unique()
         for type_id in used_turbine_types:
-            shutil.copy(os.path.join(DATA_PATH, f'wind-turbine-{type_id}.tbl'), wrf_run_dir)
+            shutil.copy(os.path.join(DATA_PATH, f'power_curves/wind-turbine-{type_id}.tbl'), wrf_run_dir)
