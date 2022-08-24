@@ -165,7 +165,7 @@ class WRF_wrapper:
         os.chmod('wrf.exe', st.st_mode | stat.S_IEXEC)
         subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./wrf.exe > wrf.out", shell=True)
 
-    def extract_outputs(self, out_path, variables_list=['U', 'V', 'TKE_PBL', 'POWER']):
+    def extract_outputs(self, out_path, domains=[1, 2], variables_list=['U', 'V', 'TKE_PBL', 'POWER']):
         """
         Extract specified variables and save each field in a newly generated netcdf file for each domain
         """
@@ -175,7 +175,7 @@ class WRF_wrapper:
 
         os.makedirs(out_path, exist_ok=True)
 
-        for dom in [1, 2]:
+        for dom in domains:
             dout = Dataset(os.path.join(out_path, f'out_d_0{dom}.nc'), 'w', format='NETCDF4')
             din = Dataset(os.path.join(self.working_directory, f'WRF/test/em_real/wrfout_d0{dom}'))
 
