@@ -105,9 +105,17 @@ class WindFarm:
         """
         Save farm to CSV
         """
-        self.farm_df.to_csv(os.path.join(wrf_run_dir, 'windturbines.txt'), index=False, sep=' ', header=False)
+        # Assign a unique integer to each turbine type (which up to this point are not necessarily integers)
+        used_turbine_types = self.farm_df.type_id.unique()
+        new_turbine_type_ids = [100 + i for i in range(1, len(used_turbine_types)+1)]
+        type_id_replace_dict = dict(zip(used_turbine_types, new_turbine_type_ids))
+
+        farm_df_to_save = self.farm_df.copy()
+        farm_df_to_save.type_id.replace(type_id_replace_dict, inplace=True)
+        farm_df_to_save.to_csv(os.path.join(wrf_run_dir, 'windturbines.txt'), index=False, sep=' ', header=False)
 
         # Copy relevant .tbl (power curve) files into wrf run directory
-        used_turbine_types = self.farm_df.type_id.unique()
-        for type_id in used_turbine_types:
-            shutil.copy(os.path.join(DATA_PATH, f'power_curves/wind-turbine-{type_id}.tbl'), wrf_run_dir)
+        for old_id, new_id in zip(used_turbine_types, new_turbine_type_ids):
+            src = os.path.join(DATA_PATH, f'power_curves/wind-turbine-{old_id}.tbl')
+            dst = os.path.join(wrf_run_dir, f'wind-turbine-{new_id}.tbl')
+            shutil.copy(src, dst)
