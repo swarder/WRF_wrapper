@@ -8,12 +8,12 @@ template = \
 /
 
 &geogrid
- parent_id         =   0,   1,
+ parent_id         =   1,   1,
  parent_grid_ratio =   1,   9,
- i_parent_start    =   50,  100,
- j_parent_start    =   125,  92,
- e_we              =  202, 73,
- e_sn              =  202, 154,
+ i_parent_start    =   1,  {d02_i_parent_start},
+ j_parent_start    =   1,  {d02_j_parent_start},
+ e_we              =  202, {d02_e_we},
+ e_sn              =  202, {d02_e_sn},
  geog_data_res = 'default','default',
  dx = 16668,
  dy = 16668,

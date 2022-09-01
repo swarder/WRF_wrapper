@@ -14,13 +14,23 @@ config_defaults = {'interval_seconds': 10800,
                    'wind_farms': None,
                    }
 
+domain_presets = {
+    'denmark': {'d02_i_parent_start': 100, 'd02_j_parent_start': 92, 'd02_e_we': 73, 'd02_e_sn': 154},
+    'wash': {'d02_i_parent_start': 71, 'd02_j_parent_start': 78, 'd02_e_we': 172, 'd02_e_sn': 172},
+}
+
 class WRF_wrapper:
     """
     Class for running WPS and WRF
     """
-    def __init__(self, working_directory, config_dict):
+    def __init__(self, working_directory, config_dict, d02_config='denmark'):
         self.working_directory = working_directory
         self.config_dict = {**config_defaults, **config_dict}
+
+        # Add d_02 config variables
+        assert d02_config in domain_presets
+        self.d02_config = d02_config
+        self.config_dict = {**self.config_dict, **domain_presets[d02_config]}
 
         assert 'WPS_path' in self.config_dict.keys()
         assert 'WRF_path' in self.config_dict.keys()
