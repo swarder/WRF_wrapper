@@ -15,22 +15,23 @@ config_defaults = {'interval_seconds': 10800,
                    }
 
 domain_presets = {
-    'denmark': {'d02_i_parent_start': 100, 'd02_j_parent_start': 92, 'd02_e_we': 73, 'd02_e_sn': 154},
-    'wash': {'d02_i_parent_start': 71, 'd02_j_parent_start': 78, 'd02_e_we': 172, 'd02_e_sn': 172},
+    'denmark': {'max_dom': 2, 'd02_i_parent_start': 100, 'd02_j_parent_start': 92, 'd02_e_we': 73, 'd02_e_sn': 154, 'ref_lat': 55.5, 'ref_lon': 6, 'truelat1': 54, 'truelat2': 56, 'stand_lon': 8},
+    'wash': {'max_dom': 2, 'd02_i_parent_start': 71, 'd02_j_parent_start': 78, 'd02_e_we': 172, 'd02_e_sn': 172, 'ref_lat': 55.5, 'ref_lon': 6, 'truelat1': 54, 'truelat2': 56, 'stand_lon': 8},
+    'houston': {'max_dom': 1, 'd02_i_parent_start': ' ', 'd02_j_parent_start': ' ', 'd02_e_we': ' ', 'd02_e_sn': ' ', 'ref_lat': 29.8, 'ref_lon': -95.4, 'truelat1': 24, 'truelat2': 34, 'stand_lon': -95}
 }
 
 class WRF_wrapper:
     """
     Class for running WPS and WRF
     """
-    def __init__(self, working_directory, config_dict, d02_config='denmark'):
+    def __init__(self, working_directory, config_dict, domain_config='denmark'):
         self.working_directory = working_directory
         self.config_dict = {**config_defaults, **config_dict}
 
-        # Add d_02 config variables
-        assert d02_config in domain_presets
-        self.d02_config = d02_config
-        self.config_dict = {**self.config_dict, **domain_presets[d02_config]}
+        # Add domain config variables
+        assert domain_config in domain_presets
+        self.domain_config = domain_config
+        self.config_dict = {**self.config_dict, **domain_presets[domain_config]}
 
         assert 'WPS_path' in self.config_dict.keys()
         assert 'WRF_path' in self.config_dict.keys()
@@ -175,10 +176,13 @@ class WRF_wrapper:
         os.chmod('wrf.exe', st.st_mode | stat.S_IEXEC)
         subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./wrf.exe > wrf.out", shell=True)
 
-    def extract_outputs(self, out_path, domains=[1, 2], variables_list=['U', 'V', 'TKE_PBL', 'POWER']):
+    def extract_outputs(self, out_path, domains=None, variables_list=['U', 'V', 'TKE_PBL', 'POWER']):
         """
         Extract specified variables and save each field in a newly generated netcdf file for each domain
         """
+        if domains is None:
+            domains = range(1, self.config_dict['max_dom']+1)
+
         # Remove POWER variable if no wind farms
         if 'POWER' in variables_list and self.config_dict['wind_farms'] is None:
             del variables_list[variables_list.index('POWER')]

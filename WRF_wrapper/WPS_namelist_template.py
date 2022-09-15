@@ -1,7 +1,7 @@
 template = \
 """&share
  wrf_core = 'ARW',
- max_dom = 2,
+ max_dom = {max_dom},
  start_date = '{start_date_str}','{start_date_str}',
  end_date   = '{end_date_str}','{end_date_str}',
  interval_seconds = {interval_seconds}
@@ -18,11 +18,11 @@ template = \
  dx = 16668,
  dy = 16668,
  map_proj = 'lambert',
- ref_lat   =  55.5,
- ref_lon   = 6,
- truelat1  =  54,
- truelat2  =  56,
- stand_lon = 8.0,
+ ref_lat   =  {ref_lat},
+ ref_lon   = {ref_lon},
+ truelat1  =  {truelat1},
+ truelat2  =  {truelat2},
+ stand_lon = {stand_lon},
  geog_data_path = '{geog_data_path}'
 /
 
