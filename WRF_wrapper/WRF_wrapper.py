@@ -31,7 +31,7 @@ class WRF_wrapper:
         # Add domain config variables
         assert domain_config in domain_presets
         self.domain_config = domain_config
-        self.config_dict = {**self.config_dict, **domain_presets[domain_config]}
+        self.config_dict = {**domain_presets[domain_config], **self.config_dict}
 
         assert 'WPS_path' in self.config_dict.keys()
         assert 'WRF_path' in self.config_dict.keys()
