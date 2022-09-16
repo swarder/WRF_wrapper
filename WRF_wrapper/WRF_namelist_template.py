@@ -32,7 +32,7 @@ template = \
 /
 
 &domains
-    time_step = 45,
+    time_step = {time_step},
     time_step_fract_num = 0,
     time_step_fract_den = 2,
     max_dom = {max_dom},
