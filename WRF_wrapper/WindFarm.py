@@ -3,6 +3,9 @@ import numpy as np
 import shutil
 import os
 import pkg_resources
+import fiona
+import utm
+from shapely.geometry import shape, Point, Polygon
 
 DATA_PATH = pkg_resources.resource_filename('WRF_wrapper', 'data/')
 
@@ -84,6 +87,61 @@ class WindFarm:
         farm_df['lat'] = farm_df['lat'] - farm_df['lat'].mean() + farm_lat
         farm_df['lon'] = farm_df['lon'] - farm_df['lon'].mean() + farm_lon
         farm_df['type_id'] = type_id
+        return cls(farm_df)
+
+    @classmethod
+    def from_lease_area(cls, lease_area_name, layout='grid', type_id=6, turbine_spacing=['10D', '4D'], grid_alignment=90):
+        """
+        Create WindFarm object within specified lease_area_name, using turbines of specified type_id, and specified turbine_spacing
+        turbine_spacing can be a list, specifying spacing in two directions. First direction is in direction specified by grid_alignment, second direction is perpendicular
+        """
+        if not layout == 'grid':
+            raise NotImplemtedError
+        if not isinstance(turbine_spacing, list):
+            turbine_spacing = [turbine_spacing, turbine_spacing]
+
+        turbine = WindTurbine.from_type_id(type_id)
+        for i in range(2):
+            if isinstance(turbine_spacing[i], str):
+                # Assume of the form '7D', meaning spacing is 7 turbine diameters
+                assert turbine_spacing[i][-1] == 'D'
+                turbine_spacing[i] = turbine.diameter * float(turbine_spacing[i][:-1])
+
+        lease_polygon = fiona.open(os.path.join(DATA_PATH, f'lease_areas/{lease_area_name}/lease_area.shp')).next()
+        lease_area_points = np.array(lease_polygon['geometry']['coordinates'][0])
+        x_farm, y_farm, zone_num, zone_let = utm.from_latlon(lease_area_points[:,1].mean(), lease_area_points[:,0].mean())
+
+        lease_area_points_utm = [tuple(utm.from_latlon(p[1], p[0], force_zone_number=zone_num, force_zone_letter=zone_let)[:2]) for p in lease_area_points]
+        lease_geometry_utm = {'type': 'Polygon', 'coordinates': [lease_area_points_utm]}
+        lease_area_area = shape(lease_geometry_utm).area
+        n = np.sqrt(lease_area_area) / min(turbine_spacing)
+
+        # Generate grid around that point, and rotate
+        yy, xx = np.meshgrid(np.arange(-5*n, 5*n), np.arange(-5*n, 5*n))
+        xx = xx * turbine_spacing[0]
+        yy = yy * turbine_spacing[1]
+        turbine_xy_complex = (xx + 1j * yy) * np.exp(1j * (90 - grid_alignment) * np.pi/180)
+        turbine_xx = np.real(turbine_xy_complex) + x_farm
+        turbine_yy = np.imag(turbine_xy_complex) + y_farm
+        farm_df = pd.DataFrame({'x': turbine_xx.flatten(), 'y': turbine_yy.flatten()})
+
+        # Initial filtering to speed things up
+        lease_area_points_utm = np.array(lease_area_points_utm)
+        farm_df = farm_df.loc[(farm_df.x >= lease_area_points_utm[:,0].min()) & (farm_df.x <= lease_area_points_utm[:,0].max())]
+        farm_df = farm_df.loc[(farm_df.y >= lease_area_points_utm[:,1].min()) & (farm_df.y <= lease_area_points_utm[:,1].max())]
+
+        # Convert back to lat-lon coords
+        def convert(xy):
+            return pd.Series(utm.to_latlon(xy['x'], xy['y'], zone_num, zone_let), index=['lat', 'lon'])
+        farm_df = farm_df.apply(convert, axis=1)
+
+        # Only include turbines in the lease area
+        def is_in_lease_area(latlon):
+            return shape(Point(latlon['lon'], latlon['lat'])).within(shape(lease_polygon['geometry']))
+        farm_df = farm_df.loc[farm_df.apply(is_in_lease_area, axis=1)]
+
+        farm_df['type_id'] = type_id
+        farm_df.reset_index(drop=True, inplace=True)
         return cls(farm_df)
 
     def __add__(self, o):
