@@ -213,4 +213,7 @@ class WRF_wrapper:
         """
         Delete working directory
         """
-        shutil.rmtree(self.working_directory)
+        try:
+            shutil.rmtree(self.working_directory)
+        except FileNotFoundError:
+            pass
