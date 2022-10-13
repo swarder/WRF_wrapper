@@ -27,6 +27,7 @@ class WRF_wrapper:
     def __init__(self, working_directory, config_dict, domain_config='denmark'):
         self.working_directory = working_directory
         self.config_dict = {**config_defaults, **config_dict}
+        self.config_dict['dx_d02'] = self.config_dict['dx'] // self.config_dict['d02_grid_ratio']
 
         # Add domain config variables
         assert domain_config in domain_presets
