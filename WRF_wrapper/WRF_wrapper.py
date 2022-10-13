@@ -15,9 +15,9 @@ config_defaults = {'interval_seconds': 10800,
                    }
 
 domain_presets = {
-    'denmark': {'max_dom': 2, 'time_step': 45, 'dx': 16668, 'd02_grid_ratio': 9, 'd02_dt_ratio': 3, 'd02_i_parent_start': 100, 'd02_j_parent_start': 92, 'd02_e_we': 73, 'd02_e_sn': 154, 'ref_lat': 55.5, 'ref_lon': 6, 'truelat1': 54, 'truelat2': 56, 'stand_lon': 8},
-    'wash': {'max_dom': 2, 'time_step': 45, 'dx': 16668, 'd02_grid_ratio': 9, 'd02_dt_ratio': 3, 'd02_i_parent_start': 71, 'd02_j_parent_start': 78, 'd02_e_we': 172, 'd02_e_sn': 172, 'ref_lat': 55.5, 'ref_lon': 6, 'truelat1': 54, 'truelat2': 56, 'stand_lon': 8},
-    'houston': {'max_dom': 1, 'time_step': 45, 'dx': 16668, 'd02_grid_ratio': 9, 'd02_dt_ratio': 3, 'd02_i_parent_start': ' ', 'd02_j_parent_start': ' ', 'd02_e_we': ' ', 'd02_e_sn': ' ', 'ref_lat': 29.8, 'ref_lon': -95.4, 'truelat1': 24, 'truelat2': 34, 'stand_lon': -95}
+    'denmark': {'max_dom': 2, 'time_step': 45, 'dx': 16668, 'd02_grid_ratio': 9, 'd02_dt_ratio': 3, 'd01_e_we': 202, 'd01_e_sn': 202, 'd02_i_parent_start': 100, 'd02_j_parent_start': 92, 'd02_e_we': 73, 'd02_e_sn': 154, 'ref_lat': 55.5, 'ref_lon': 6, 'truelat1': 54, 'truelat2': 56, 'stand_lon': 8},
+    'wash': {'max_dom': 2, 'time_step': 45, 'dx': 16668, 'd02_grid_ratio': 9, 'd02_dt_ratio': 3, 'd01_e_we': 202, 'd01_e_sn': 202, 'd02_i_parent_start': 71, 'd02_j_parent_start': 78, 'd02_e_we': 172, 'd02_e_sn': 172, 'ref_lat': 55.5, 'ref_lon': 6, 'truelat1': 54, 'truelat2': 56, 'stand_lon': 8},
+    'houston': {'max_dom': 1, 'time_step': 45, 'dx': 16668, 'd02_grid_ratio': 9, 'd02_dt_ratio': 3, 'd01_e_we': 202, 'd01_e_sn': 202, 'd02_i_parent_start': ' ', 'd02_j_parent_start': ' ', 'd02_e_we': ' ', 'd02_e_sn': ' ', 'ref_lat': 29.8, 'ref_lon': -95.4, 'truelat1': 24, 'truelat2': 34, 'stand_lon': -95}
 }
 
 class WRF_wrapper:
