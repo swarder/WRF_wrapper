@@ -9,14 +9,14 @@ template = \
 
 &geogrid
  parent_id         =   1,   1,
- parent_grid_ratio =   1,   9,
+ parent_grid_ratio =   1,   {d02_grid_ratio},
  i_parent_start    =   1,  {d02_i_parent_start},
  j_parent_start    =   1,  {d02_j_parent_start},
  e_we              =  202, {d02_e_we},
  e_sn              =  202, {d02_e_sn},
  geog_data_res = 'default','default',
- dx = 16668,
- dy = 16668,
+ dx = {dx},
+ dy = {dx},
  map_proj = 'lambert',
  ref_lat   =  {ref_lat},
  ref_lon   = {ref_lon},
