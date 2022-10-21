@@ -28,7 +28,8 @@ template = \
     auxinput4_inname = 'wrflowinp_d<domain>',
     io_form_auxinput4 = 2,
     nwp_diagnostics = 0,
-    history_outname = 'wrfout_d<domain>'
+    history_outname = 'wrfout_d<domain>',
+    iofields_filename = 'io_file_d01.txt', 'io_file_d02.txt'
 /
 
 &domains

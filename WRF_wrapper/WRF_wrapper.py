@@ -77,6 +77,15 @@ class WRF_wrapper:
         f.write(config_file_string)
         f.close()
 
+        # Add extra io files
+        io_str = r'+:h:0:RMOL' # Add RMOL as output variable to stream 0
+        io_filename_d01 = os.path.join(self.working_directory, 'WRF/test/em_real/io_file_d01.txt')
+        io_filename_d02 = os.path.join(self.working_directory, 'WRF/test/em_real/io_file_d02.txt')
+        for filename in [io_filename_d01, io_filename_d02]:
+            f = open(filename, 'w')
+            f.write(io_str)
+            f.close()
+
     def initialise(self):
         """
         Set up directory structure and copy files
