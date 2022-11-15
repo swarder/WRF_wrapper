@@ -24,10 +24,6 @@ class WindTurbine:
         f.close()
         self.power_curve = pd.read_csv(tbl_file, sep=' ', skiprows=2, names=['wind_speed', 'thrust_coeff', 'power'])
 
-        # Convert diameter to degrees
-        earth_radius = 6400000
-        self.diameter_degrees = self.diameter / earth_radius * 180 / np.pi
-
     @classmethod
     def from_type_id(cls, type_id):
         tbl_file = os.path.join(DATA_PATH, f'power_curves/wind-turbine-{type_id}.tbl')
@@ -74,19 +70,26 @@ class WindFarm:
         if isinstance(turbine_spacing, str):
             # Assume of the form '7D', meaning spacing is 7 turbine diameters
             assert turbine_spacing[-1] == 'D'
-            turbine_spacing = turbine.diameter_degrees * float(turbine_spacing[:-1])
+            turbine_spacing = turbine.diameter * float(turbine_spacing[:-1])
 
         # Generate simple turbine array
         num_turbines = int(np.ceil(installed_capacity / turbine.nominal_power))
         turbine_array_size = np.ceil(np.sqrt(num_turbines))
         yy, xx = np.meshgrid(np.arange(turbine_array_size), np.arange(turbine_array_size))
         turbine_xy = np.stack([xx.flatten(), yy.flatten()]).T[:num_turbines] * turbine_spacing
-        farm_df = pd.DataFrame(turbine_xy, columns=['lat', 'lon'])
+        turbine_xy -= turbine_xy.mean(axis=0)
 
-        # Now centre the farm in the correct place
-        farm_df['lat'] = farm_df['lat'] - farm_df['lat'].mean() + farm_lat
-        farm_df['lon'] = farm_df['lon'] - farm_df['lon'].mean() + farm_lon
+        # Convert farm latlon to utm
+        farm_x, farm_y, zone_number, zone_letter = utm.from_latlon(farm_lat, farm_lon)
+        turbine_xy += np.array([farm_x, farm_y])[None,:]
+
+        # Convert turbine locations to latlon
+        turbine_lat, turbine_lon = utm.to_latlon(turbine_xy[:,0], turbine_xy[:,1], zone_number, zone_letter, strict=False)
+        turbine_latlon = np.stack([turbine_lat, turbine_lon], axis=-1)
+
+        farm_df = pd.DataFrame(turbine_latlon, columns=['lat', 'lon'])
         farm_df['type_id'] = type_id
+
         return cls(farm_df)
 
     @classmethod
