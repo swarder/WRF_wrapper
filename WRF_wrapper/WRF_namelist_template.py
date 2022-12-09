@@ -133,14 +133,16 @@ template = \
     diff_6th_opt = 2, 2,
     diff_6th_factor = 0.06, 0.1,
     base_temp = 290.0,
-    damp_opt = 0,
+    damp_opt = {damp_opt},
     zdamp = 5000.0, 5000.0,
-    dampcoef = 0.05, 0.05,
+    dampcoef = {dampcoef}, {dampcoef},
     khdif = 0, 0,
     kvdif = 0, 0,
     non_hydrostatic = .true., .true.,
     moist_adv_opt = 1, 1,
     scalar_adv_opt = 1, 1,
+    w_damping = {w_damping},
+    epssm = {epssm}, {epssm},
 /
 
 &bdy_control

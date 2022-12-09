@@ -12,6 +12,10 @@ from netCDF4 import Dataset
 
 config_defaults = {'interval_seconds': 10800,
                    'wind_farms': None,
+                   'damp_opt': 0,
+                   'dampcoef': 0.05,
+                   'w_damping': 0,
+                   'epssm': 0.1,
                    }
 
 domain_presets = {
