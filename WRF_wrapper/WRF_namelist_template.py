@@ -127,7 +127,7 @@ template = \
 /
 
 &dynamics
-    w_damping = 1,
+    w_damping = {w_damping},
     diff_opt = 1,
     km_opt = 4,
     diff_6th_opt = 2, 2,
@@ -141,7 +141,6 @@ template = \
     non_hydrostatic = .true., .true.,
     moist_adv_opt = 1, 1,
     scalar_adv_opt = 1, 1,
-    w_damping = {w_damping},
     epssm = {epssm}, {epssm},
 /
 
