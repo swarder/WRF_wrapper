@@ -136,6 +136,9 @@ class WindFarm:
             return pd.Series(utm.to_latlon(xy['x'], xy['y'], zone_num, zone_let), index=['lat', 'lon'])
         farm_df = farm_df.apply(convert, axis=1)
 
+        if farm_df.shape[0] == 0:
+            return cls(farm_df)
+
         # Only include turbines in the lease area
         def is_in_lease_area(latlon):
             return shape(Point(latlon['lon'], latlon['lat'])).within(shape(geometry))
@@ -164,8 +167,7 @@ class WindFarm:
         centroid_xy = np.array([centroid_x, centroid_y])
         vertices_utm = np.array([(r * np.cos(phi*180/np.pi), r * np.sin(phi*180/np.pi)) for r, phi in zip(polar_radii, polar_angles)]) + centroid_xy[None,:]
         vertices_latlon = np.stack(utm.to_latlon(vertices_utm[:,0], vertices_utm[:,1], zone_num, zone_let), axis=-1)
-        geometry = {'type': 'Polygon', 'coordinates': [vertices_latlon]}
-        print(vertices_latlon)
+        geometry = {'type': 'Polygon', 'coordinates': [vertices_latlon[:,::-1]]}
         return cls.from_geometry(geometry, layout, type_id, turbine_spacing, grid_alignment)
 
     def __add__(self, o):
