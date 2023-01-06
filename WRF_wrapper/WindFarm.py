@@ -165,7 +165,7 @@ class WindFarm:
         """
         centroid_x, centroid_y, zone_num, zone_let = utm.from_latlon(centroid_latlon[0], centroid_latlon[1])
         centroid_xy = np.array([centroid_x, centroid_y])
-        vertices_utm = np.array([(r * np.cos(phi*180/np.pi), r * np.sin(phi*180/np.pi)) for r, phi in zip(polar_radii, polar_angles)]) + centroid_xy[None,:]
+        vertices_utm = np.array([(r * np.cos(phi*np.pi/180), r * np.sin(phi*np.pi/180)) for r, phi in zip(polar_radii, polar_angles)]) + centroid_xy[None,:]
         vertices_latlon = np.stack(utm.to_latlon(vertices_utm[:,0], vertices_utm[:,1], zone_num, zone_let), axis=-1)
         geometry = {'type': 'Polygon', 'coordinates': [vertices_latlon[:,::-1]]}
         return cls.from_geometry(geometry, layout, type_id, turbine_spacing, grid_alignment)
