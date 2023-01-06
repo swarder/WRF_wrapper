@@ -93,10 +93,9 @@ class WindFarm:
         return cls(farm_df)
 
     @classmethod
-    def from_lease_area(cls, lease_area_name, layout='grid', type_id=6, turbine_spacing=['10D', '4D'], grid_alignment=90):
+    def from_geometry(cls, geometry, layout, type_id, turbine_spacing, grid_alignment):
         """
-        Create WindFarm object within specified lease_area_name, using turbines of specified type_id, and specified turbine_spacing
-        turbine_spacing can be a list, specifying spacing in two directions. First direction is in direction specified by grid_alignment, second direction is perpendicular
+        Generate WindFarm object from a given geometry
         """
         if not layout == 'grid':
             raise NotImplemtedError
@@ -110,8 +109,7 @@ class WindFarm:
                 assert turbine_spacing[i][-1] == 'D'
                 turbine_spacing[i] = turbine.diameter * float(turbine_spacing[i][:-1])
 
-        lease_polygon = fiona.open(os.path.join(DATA_PATH, f'lease_areas/{lease_area_name}/lease_area.shp')).next()
-        lease_area_points = np.array(lease_polygon['geometry']['coordinates'][0])
+        lease_area_points = np.array(geometry['coordinates'][0])
         x_farm, y_farm, zone_num, zone_let = utm.from_latlon(lease_area_points[:,1].mean(), lease_area_points[:,0].mean())
 
         lease_area_points_utm = [tuple(utm.from_latlon(p[1], p[0], force_zone_number=zone_num, force_zone_letter=zone_let)[:2]) for p in lease_area_points]
@@ -140,12 +138,35 @@ class WindFarm:
 
         # Only include turbines in the lease area
         def is_in_lease_area(latlon):
-            return shape(Point(latlon['lon'], latlon['lat'])).within(shape(lease_polygon['geometry']))
+            return shape(Point(latlon['lon'], latlon['lat'])).within(shape(geometry))
         farm_df = farm_df.loc[farm_df.apply(is_in_lease_area, axis=1)]
 
         farm_df['type_id'] = type_id
         farm_df.reset_index(drop=True, inplace=True)
         return cls(farm_df)
+
+    @classmethod
+    def from_lease_area(cls, lease_area_name, layout='grid', type_id=6, turbine_spacing=['10D', '4D'], grid_alignment=90):
+        """
+        Create WindFarm object within specified lease_area_name, using turbines of specified type_id, and specified turbine_spacing
+        turbine_spacing can be a list, specifying spacing in two directions. First direction is in direction specified by grid_alignment, second direction is perpendicular
+        """
+        lease_polygon = fiona.open(os.path.join(DATA_PATH, f'lease_areas/{lease_area_name}/lease_area.shp')).next()
+        geometry = lease_polygon['geometry']
+        return cls.from_geometry(geometry, layout, type_id, turbine_spacing, grid_alignment)
+
+    @classmethod
+    def from_polygon(cls, centroid_latlon, polar_angles, polar_radii, layout='grid', type_id=6, turbine_spacing=['10D', '4D'], grid_alignment=90):
+        """
+        Create WindFarm object within a polygon at specified centroid, and with verticies at the specified polar coordinates
+        """
+        centroid_x, centroid_y, zone_num, zone_let = utm.from_latlon(centroid_latlon[0], centroid_latlon[1])
+        centroid_xy = np.array([centroid_x, centroid_y])
+        vertices_utm = np.array([(r * np.cos(phi*180/np.pi), r * np.sin(phi*180/np.pi)) for r, phi in zip(polar_radii, polar_angles)]) + centroid_xy[None,:]
+        vertices_latlon = np.stack(utm.to_latlon(vertices_utm[:,0], vertices_utm[:,1], zone_num, zone_let), axis=-1)
+        geometry = {'type': 'Polygon', 'coordinates': [vertices_latlon]}
+        print(vertices_latlon)
+        return cls.from_geometry(geometry, layout, type_id, turbine_spacing, grid_alignment)
 
     def __add__(self, o):
         """
