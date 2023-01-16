@@ -34,11 +34,15 @@ canonical_turbine_type_ids = ['plausible-3.6', 'plausible-6.0', '10', '15']
 
 class NorthSeaWindFarm(WindFarm.WindFarm):
     @classmethod
-    def from_lease_area(cls, lease_area_name, include_composites=False):
+    def from_lease_area(cls, lease_area_name, include_composites=False, standard_turbine_powers=None, standard_turbine_type_ids=None):
         """
         Create WindFarm object within specified lease_area_name, using turbines of specified type_id, and specified IC
         Maximum turbine spacing is found which is sufficient to achieve the specified IC within the lease area
         """
+        if standard_turbine_powers is None:
+            standard_turbine_powers = canonical_turbine_powers
+            standard_turbine_type_ids = canonical_turbine_type_ids
+
         lease_area_id = lease_area_name_to_id[lease_area_name]
         lease_area_df['Composite'].fillna(lease_area_df['ID'], inplace=True)
         composite_id = lease_area_df.loc[lease_area_df.Name==lease_area_name, 'Composite'].values[0]
@@ -67,7 +71,7 @@ class NorthSeaWindFarm(WindFarm.WindFarm):
         lease_geometry_utm = convert_geometry_to_utm(lease_geometry_latlon)
         lease_area_area = shape(lease_geometry_utm).area
 
-        type_id = canonical_turbine_type_ids[np.argmin(np.abs(canonical_turbine_powers - turbine_target_power))]
+        type_id = standard_turbine_type_ids[np.argmin(np.abs(standard_turbine_powers - turbine_target_power))]
 
         turbine_power = WindFarm.WindTurbine.from_type_id(type_id).nominal_power
         num_required_turbines = installed_capacity / turbine_power
