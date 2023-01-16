@@ -37,7 +37,7 @@ class WRF_wrapper:
         # Combine default, domain and user-supplied config dicts
         assert domain_config in domain_presets
         self.domain_config = domain_config
-        self.config_dict = {**config_defaults, **domain_presets[domain_config], **self.config_dict}
+        self.config_dict = {**config_defaults, **domain_presets[domain_config], **config_dict}
         self.config_dict['dx_d02'] = self.config_dict['dx'] // self.config_dict['d02_grid_ratio']
 
         assert 'WPS_path' in self.config_dict.keys()
