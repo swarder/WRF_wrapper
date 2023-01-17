@@ -195,7 +195,7 @@ class WRF_wrapper:
         os.chmod('wrf.exe', st.st_mode | stat.S_IEXEC)
         subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./wrf.exe > wrf.out", shell=True)
 
-    def extract_outputs(self, out_path, domains=None, variables_list=['U', 'V', 'TKE_PBL', 'POWER']):
+    def extract_outputs(self, out_path, domains=None, variables_list=['U', 'V', 'TKE_PBL', 'POWER'], max_z_levels=None):
         """
         Extract specified variables and save each field in a newly generated netcdf file for each domain
         """
@@ -214,12 +214,24 @@ class WRF_wrapper:
 
             dout.setncatts(din.__dict__)
             for name, dimension in din.dimensions.items():
-                dout.createDimension(name, (len(dimension) if not dimension.isunlimited() else None))
+                if name in ['bottom_top', 'bottom_top_stag'] and max_z_levels is not None:
+                    dout.createDimension(name, max_z_levels)
+                else:
+                    dout.createDimension(name, (len(dimension) if not dimension.isunlimited() else None))
 
             for name, variable in din.variables.items():
                 if name in variables_list or name in ['XLAT', 'XLONG']:
+                    z_dim = None
+                    for z_name in ['bottom_top', 'bottom_top_stag']:
+                        if z_name in variable.dimensions:
+                            z_dim = variable.dimensions.index(z_name)
+                            break
+                    if (z_dim is not None) and (max_z_levels is not None):
+                        data = din[name][:].take(range(max_z_levels), axis=z_dim)
+                    else:
+                        data = din[name][:]
                     x = dout.createVariable(name, variable.datatype, variable.dimensions)
-                    dout[name][:] = din[name][:]
+                    dout[name][:] = data
                     dout[name].setncatts(din[name].__dict__)
 
             din.close()
