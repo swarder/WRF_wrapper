@@ -24,7 +24,7 @@ domain_presets = {
     'thames': {'max_dom': 2, 'time_step': 45, 'dx': 16668, 'd02_grid_ratio': 9, 'd02_dt_ratio': 3, 'd01_e_we': 202, 'd01_e_sn': 202, 'd02_i_parent_start': 73, 'd02_j_parent_start': 67, 'd02_e_we': 172, 'd02_e_sn': 172, 'ref_lat': 55.5, 'ref_lon': 6, 'truelat1': 54, 'truelat2': 56, 'stand_lon': 8},
     'liverpool': {'max_dom': 2, 'time_step': 45, 'dx': 16668, 'd02_grid_ratio': 9, 'd02_dt_ratio': 3, 'd01_e_we': 202, 'd01_e_sn': 202, 'd02_i_parent_start': 54, 'd02_j_parent_start': 83, 'd02_e_we': 172, 'd02_e_sn': 172, 'ref_lat': 55.5, 'ref_lon': 6, 'truelat1': 54, 'truelat2': 56, 'stand_lon': 8},
     'houston': {'max_dom': 1, 'time_step': 45, 'dx': 16668, 'd02_grid_ratio': 9, 'd02_dt_ratio': 3, 'd01_e_we': 202, 'd01_e_sn': 202, 'd02_i_parent_start': ' ', 'd02_j_parent_start': ' ', 'd02_e_we': ' ', 'd02_e_sn': ' ', 'ref_lat': 29.8, 'ref_lon': -95.4, 'truelat1': 24, 'truelat2': 34, 'stand_lon': -95},
-    'north_sea': {'max_dom': 2, 'time_step': 30, 'dx': 18000, 'd02_grid_ratio': 9, 'd02_dt_ratio': 3, 'd01_e_we': 202, 'd01_e_sn': 202, 'd02_i_parent_start': 71, 'd02_j_parent_start': 65, 'd02_e_we': 505, 'd02_e_sn': 721, 'ref_lat': 55.5, 'ref_lon': 4, 'truelat1': 53.5, 'truelat2': 57.5, 'stand_lon': 3.4, 'damp_opt': 3, 'dampcoef': 0.2, 'epssm': 0.3, 'w_damping': 1},
+    'north_sea': {'max_dom': 2, 'time_step': 30, 'dx': 18000, 'd02_grid_ratio': 9, 'd02_dt_ratio': 3, 'd01_e_we': 202, 'd01_e_sn': 202, 'd02_i_parent_start': 67, 'd02_j_parent_start': 64, 'd02_e_we': 541, 'd02_e_sn': 730, 'ref_lat': 55.5, 'ref_lon': 4, 'truelat1': 53.5, 'truelat2': 57.5, 'stand_lon': 3.4, 'damp_opt': 3, 'dampcoef': 0.2, 'epssm': 0.3, 'w_damping': 1},
 }
 
 class WRF_wrapper:
