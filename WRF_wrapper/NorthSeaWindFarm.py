@@ -12,31 +12,17 @@ from . import WindFarm
 
 DATA_PATH = pkg_resources.resource_filename('WRF_wrapper', 'data/')
 
-lease_area_df = pd.read_csv(os.path.join(DATA_PATH, 'lease_areas/north_sea/lease_areas.csv'))
+lease_area_df = pd.read_csv(os.path.join(DATA_PATH, 'lease_areas/north_sea/lease_areas_processed.csv'))
 lease_area_polygons_file = fiona.open(os.path.join(DATA_PATH, 'lease_areas/north_sea/lease_areas.shp'))
-lease_area_name_to_id = {}
-for p in lease_area_polygons_file:
-    id = int(p['id'])
-    name = lease_area_df.loc[lease_area_df.ID == id, 'Name'].values[0]
-    lease_area_name_to_id[name] = id
-
-def convert_geometry_to_utm(geometry_latlon):
-    coords_latlon = np.squeeze(np.array(geometry_latlon['coordinates']))
-    x_utm, y_utm, zone_number, zone_letter = utm.from_latlon(coords_latlon[:,1], coords_latlon[:,0])
-    coords_utm = np.stack([x_utm, y_utm], axis=-1)
-    geometry_utm = {'type': 'Polygon',
-                    'coordinates': [[tuple([x, y]) for x, y in zip(coords_utm[:,0], coords_utm[:,1])]],
-                    }
-    return geometry_utm
 
 canonical_turbine_powers = np.array([3.6, 6, 10, 15])
 canonical_turbine_type_ids = ['plausible-3.6', 'plausible-6.0', '10', '15']
 
 class NorthSeaWindFarm(WindFarm.WindFarm):
     @classmethod
-    def from_lease_area(cls, lease_area_name, include_composites=False, standard_turbine_powers=None, standard_turbine_type_ids=None):
+    def from_lease_area(cls, lease_area_id, standard_turbine_powers=None, standard_turbine_type_ids=None):
         """
-        Create WindFarm object within specified lease_area_name, using turbines of specified type_id, and specified IC
+        Create WindFarm object within specified lease_area_id, using turbines of specified type_id, and specified IC
         Maximum turbine spacing is found which is sufficient to achieve the specified IC within the lease area
         """
         if standard_turbine_powers is None:
@@ -44,45 +30,12 @@ class NorthSeaWindFarm(WindFarm.WindFarm):
             standard_turbine_type_ids = canonical_turbine_type_ids
         standard_turbine_powers = np.array(standard_turbine_powers)
 
-        lease_area_id = lease_area_name_to_id[lease_area_name]
-        lease_area_df['Composite'].fillna(lease_area_df['ID'], inplace=True)
-        composite_id = lease_area_df.loc[lease_area_df.Name==lease_area_name, 'Composite'].values[0]
-        if include_composites:
-            polygons = []
-            installed_capacity = 0
-            total_num_turbines = 0
-            composite_farms = lease_area_df.loc[lease_area_df.Composite==composite_id]
-            if isinstance(include_composites, str):
-                composite_farms = composite_farms.loc[composite_farms.Status == include_composites]
-            for i, row in composite_farms.iterrows():
-                lease_area_id = row.ID
-                lease_geometry_latlon = lease_area_polygons_file[lease_area_id]['geometry']
-                polygons.append(shape(lease_geometry_latlon))
-                installed_capacity += float(row['Total IC'])
-                total_num_turbines += float(row['Num turbines'])
-            combined_polygon = unary_union(polygons)
-            lease_geometry_latlon = {'type': 'Polygon',
-                                     'coordinates': [combined_polygon.exterior.coords]}
-            turbine_target_power = installed_capacity / total_num_turbines
-        else:
-            lease_geometry_latlon = lease_area_polygons_file[lease_area_id]['geometry']
-            # Some 'Total IC' and 'Num turbines' values are ranges (strings separated by '-')
-            # Handle this by taking halfway point
-            ic_str = lease_area_df.loc[lease_area_df.Name == lease_area_name, 'Total IC'].values[0]
-            try:
-                installed_capacity = float(ic_str)
-            except ValueError:
-                installed_capacity = 0.5 * (float(ic_str.split('-')[0]) + float(ic_str.split('-')[1]))
-            num_turbines_str = lease_area_df.loc[lease_area_df.Name == lease_area_name, 'Num turbines'].values[0]
-            try:
-                num_turbines = float(num_turbines_str)
-            except ValueError:
-                num_turbines = 0.5 * (float(num_turbines_str.split('-')[0]) + float(num_turbines_str.split('-')[1]))
-            turbine_target_power = installed_capacity / num_turbines
+        lease_geometry_latlon = lease_area_polygons_file[lease_area_id]['geometry']
 
-        lease_geometry_utm = convert_geometry_to_utm(lease_geometry_latlon)
-        lease_area_area = shape(lease_geometry_utm).area
-
+        lease_area_row = lease_area_df.loc[lease_area_df.ID == lease_area_id].iloc[0]
+        lease_area_area = lease_area_row.area * 1e6
+        installed_capacity = lease_area_row['IC_numeric']
+        turbine_target_power = installed_capacity / lease_area_row['num_turbines_numeric']
         type_id = standard_turbine_type_ids[np.argmin(np.abs(standard_turbine_powers - turbine_target_power))]
 
         turbine_power = WindFarm.WindTurbine.from_type_id(type_id).nominal_power
