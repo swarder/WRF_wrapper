@@ -35,7 +35,12 @@ class NorthSeaWindFarm(WindFarm.WindFarm):
         lease_area_row = lease_area_df.loc[lease_area_df.ID == lease_area_id].iloc[0]
         lease_area_area = lease_area_row.area * 1e6
         installed_capacity = lease_area_row['IC_numeric']
-        turbine_target_power = installed_capacity / lease_area_row['num_turbines_numeric']
+        num_turbines = lease_area_row['num_turbines_numeric']
+        if np.isnan(num_turbines):
+            print('No num_turbines info, assuming 10 MW turbines')
+            turbine_target_power = 10
+        else:
+            turbine_target_power = installed_capacity / num_turbines
         type_id = standard_turbine_type_ids[np.argmin(np.abs(standard_turbine_powers - turbine_target_power))]
 
         turbine_power = WindFarm.WindTurbine.from_type_id(type_id).nominal_power
