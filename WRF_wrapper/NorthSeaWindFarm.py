@@ -42,6 +42,7 @@ class NorthSeaWindFarm(WindFarm.WindFarm):
         if standard_turbine_powers is None:
             standard_turbine_powers = canonical_turbine_powers
             standard_turbine_type_ids = canonical_turbine_type_ids
+        standard_turbine_powers = np.array(standard_turbine_powers)
 
         lease_area_id = lease_area_name_to_id[lease_area_name]
         lease_area_df['Composite'].fillna(lease_area_df['ID'], inplace=True)
@@ -65,8 +66,19 @@ class NorthSeaWindFarm(WindFarm.WindFarm):
             turbine_target_power = installed_capacity / total_num_turbines
         else:
             lease_geometry_latlon = lease_area_polygons_file[lease_area_id]['geometry']
-            turbine_target_power = lease_area_df.loc[lease_area_df.Name == lease_area_name, 'Turbine capacity'].values[0]
-            installed_capacity = float(lease_area_df.loc[lease_area_df.Name == lease_area_name, 'Total IC'].values[0])
+            # Some 'Total IC' and 'Num turbines' values are ranges (strings separated by '-')
+            # Handle this by taking halfway point
+            ic_str = lease_area_df.loc[lease_area_df.Name == lease_area_name, 'Total IC'].values[0]
+            try:
+                installed_capacity = float(ic_str)
+            except ValueError:
+                installed_capacity = 0.5 * (float(ic_str.split('-')[0]) + float(ic_str.split('-')[1]))
+            num_turbines_str = lease_area_df.loc[lease_area_df.Name == lease_area_name, 'Num turbines'].values[0]
+            try:
+                num_turbines = float(num_turbines_str)
+            except ValueError:
+                num_turbines = 0.5 * (float(num_turbines_str.split('-')[0]) + float(num_turbines_str.split('-')[1]))
+            turbine_target_power = installed_capacity / num_turbines
 
         lease_geometry_utm = convert_geometry_to_utm(lease_geometry_latlon)
         lease_area_area = shape(lease_geometry_utm).area
