@@ -29,6 +29,10 @@ domain_presets = {
                            'd02_i_parent_start': 76, 'd02_j_parent_start': 64, 'd02_e_we': 460, 'd02_e_sn': 541,
                            'ref_lat': 55.5, 'ref_lon': 4, 'truelat1': 53.5, 'truelat2': 57.5, 'stand_lon': 3.4,
                            'damp_opt': 3, 'dampcoef': 0.2, 'epssm': 0.3, 'w_damping': 1},
+    'northwestern_north_sea': {'max_dom': 2, 'time_step': 30, 'dx': 18000, 'd02_grid_ratio': 9, 'd02_dt_ratio': 3, 'd01_e_we': 202, 'd01_e_sn': 202,
+                               'd02_i_parent_start': 66, 'd02_j_parent_start': 86, 'd02_e_we': 316, 'd02_e_sn': 442,
+                               'ref_lat': 55.5, 'ref_lon': 4, 'truelat1': 53.5, 'truelat2': 57.5, 'stand_lon': 3.4,
+                               'damp_opt': 3, 'dampcoef': 0.2, 'epssm': 0.3, 'w_damping': 1},
 }
 
 class WRF_wrapper:
