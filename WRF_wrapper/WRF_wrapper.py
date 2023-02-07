@@ -1,4 +1,7 @@
-from . import era_downloader
+try:
+    from . import era_downloader
+except ModuleNotFoundError:
+    print("Unable to import era_downloader. Let's hope you weren't planning to use it")
 from . import WPS_namelist_template
 from . import WRF_namelist_template
 
