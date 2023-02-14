@@ -24,6 +24,9 @@ class WindTurbine:
         f.close()
         self.power_curve = pd.read_csv(tbl_file, sep=' ', skiprows=2, names=['wind_speed', 'thrust_coeff', 'power'])
 
+    def generate_power_curve_func(self):
+        return lambda x: np.interp(x, self.power_curve.wind_speed, self.power_curve.power)
+
     @classmethod
     def from_type_id(cls, type_id):
         tbl_file = os.path.join(DATA_PATH, f'power_curves/wind-turbine-{type_id}.tbl')
