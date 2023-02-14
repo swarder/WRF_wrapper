@@ -6,6 +6,7 @@ import pkg_resources
 import fiona
 import utm
 from shapely.geometry import shape, Point, Polygon
+import py_wake.wind_turbines
 
 DATA_PATH = pkg_resources.resource_filename('WRF_wrapper', 'data/')
 
@@ -32,6 +33,23 @@ class WindTurbine:
         tbl_file = os.path.join(DATA_PATH, f'power_curves/wind-turbine-{type_id}.tbl')
         return cls(tbl_file)
 
+    def to_pywake(self):
+        """
+        Export to pywake WindTurbine
+        """
+        ct_func = py_wake.wind_turbines.power_ct_functions.PowerCtTabular(
+                                                self.power_curve.wind_speed,
+                                                self.power_curve.power,
+                                                'kW',
+                                                self.power_curve.thrust_coeff,
+                                                )
+        my_wt = py_wake.wind_turbines.WindTurbine(
+                            name='from_WRF_wrapper_WindTurbine',
+                            diameter=self.diameter,
+                            hub_height=self.height,
+                            powerCtFunction=ct_func,
+                            )
+        return my_wt
 
 class WindFarm:
     """
