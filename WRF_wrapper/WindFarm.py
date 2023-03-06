@@ -170,7 +170,6 @@ class WindFarm:
         farm_df.reset_index(drop=True, inplace=True)
 
         farm = cls(farm_df)
-        print(np.array(geometry['coordinates'])[0])
         farm.boundary_polygon = Polygon(np.array(geometry['coordinates'])[0])
 
         return farm
