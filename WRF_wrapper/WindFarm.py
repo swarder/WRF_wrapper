@@ -5,7 +5,7 @@ import os
 import pkg_resources
 import fiona
 import utm
-from shapely.geometry import shape, Point, Polygon
+from shapely.geometry import shape, Point, Polygon, MultiPoint
 import py_wake.wind_turbines
 
 DATA_PATH = pkg_resources.resource_filename('WRF_wrapper', 'data/')
@@ -58,6 +58,7 @@ class WindFarm:
     def __init__(self, farm_df):
         # farm_df should be a pandas dataframe with columns lon, lat, type_id
         self.farm_df = farm_df
+        self.boundary_polygon = self.generate_convex_hull()
 
     @classmethod
     def from_template(cls, template_file=None, template_id=None, farm_lon=None, farm_lat=None, type_id=6):
@@ -167,7 +168,12 @@ class WindFarm:
 
         farm_df['type_id'] = type_id
         farm_df.reset_index(drop=True, inplace=True)
-        return cls(farm_df)
+
+        farm = cls(farm_df)
+        print(np.array(geometry['coordinates'])[0])
+        farm.boundary_polygon = Polygon(np.array(geometry['coordinates'])[0])
+
+        return farm
 
     @classmethod
     def from_lease_area(cls, lease_area_name, layout='grid', type_id=6, turbine_spacing=['10D', '4D'], grid_alignment=90):
@@ -224,3 +230,11 @@ class WindFarm:
             src = os.path.join(DATA_PATH, f'power_curves/wind-turbine-{old_id}.tbl')
             dst = os.path.join(wrf_run_dir, f'wind-turbine-{new_id}.tbl')
             shutil.copy(src, dst)
+
+    def generate_convex_hull(self):
+        """
+        Generate convex hull based on turbine locations (in lat-lon)
+        """
+        farm_latlons = self.farm_df[['lon', 'lat']].values
+        mpt = MultiPoint([Point(ll) for ll in farm_latlons])
+        return mpt.convex_hull
