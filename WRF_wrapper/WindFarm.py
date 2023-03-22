@@ -237,3 +237,27 @@ class WindFarm:
         farm_latlons = self.farm_df[['lon', 'lat']].values
         mpt = MultiPoint([Point(ll) for ll in farm_latlons])
         return mpt.convex_hull
+
+    def duplicate_with_perturbation(self, ptb, crs='latlon'):
+        """
+        Return a copy of self, with a perturbation added to farm location
+        if crs == 'latlon', perturbation coordates are latlon
+        Otherwise, assume crs specifies a utm zone
+        """
+        new_farm_df = self.farm_df.copy()
+        if crs == 'latlon':
+            new_farm_df['lon'] += ptb[0]
+            new_farm_df['lat'] += ptb[1]
+        elif crs.startswith('UTM'):
+            zone_num = int(crs[3:])
+            x, y, _, _ = utm.from_latlon(new_farm_df['lat'],
+                                         new_farm_df['lon'],
+                                         force_zone_number=zone_num,
+                                         force_zone_letter='N')
+            x_ptb = x + ptb[0]
+            y_ptb = y + ptb[1]
+            new_lat, new_lon = utm.to_latlon(x_ptb, y_ptb,
+                                             zone_num, 'N', strict=False)
+            new_farm_df['lon'] = new_lon
+            new_farm_df['lat'] = new_lat
+        return WindFarm(new_farm_df)
