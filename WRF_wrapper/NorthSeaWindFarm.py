@@ -52,7 +52,7 @@ class NorthSeaWindFarm(WindFarm.WindFarm):
 
         # Likely to be too few turbines initially
         while n < num_required_turbines:
-            print(approx_turbine_separation)
+            #print(approx_turbine_separation)
             approx_turbine_separation -= 25
             farm = cls.from_geometry(lease_geometry_latlon, 'grid', type_id, approx_turbine_separation, 90)
             n = farm.farm_df.shape[0]
