@@ -54,7 +54,7 @@ template = \
     max_ts_locs = 12,
     ts_buf_size = 960,
     max_ts_level = 15,
-    feedback = 0,
+    feedback = {feedback},
     smooth_option = 0,
     eta_levels = 1.0, 0.998621, 0.997244, 0.995868, 0.994495, 0.993123,
                  0.991753, 0.990385, 0.989018, 0.987653, 0.986291, 0.984929,

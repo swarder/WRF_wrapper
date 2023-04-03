@@ -19,6 +19,7 @@ config_defaults = {'interval_seconds': 10800,
                    'dampcoef': 0.05,
                    'w_damping': 0,
                    'epssm': 0.1,
+                   'feedback': 0,
                    }
 
 domain_presets = {
