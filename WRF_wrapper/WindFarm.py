@@ -51,6 +51,41 @@ class WindTurbine:
                             )
         return my_wt
 
+    def to_floris(self):
+        """
+        Export to FLORIS dict format
+        """
+        wind_speed = self.power_curve.wind_speed
+        thrust = self.power_curve.thrust_coeff
+        power = self.power_curve.power
+
+        rotor_area = np.pi * (0.5 * self.diameter) ** 2
+        power_coeff = power / (0.5 * 1.225 * rotor_area * wind_speed ** 3)
+
+        wind_speed = wind_speed.tolist()
+        thrust = thrust.tolist()
+        power_coeff = power_coeff.tolist()
+
+        wind_speed = [0] + wind_speed + [wind_speed[-1]+0.1, 50]
+        thrust = [thrust[0]] + thrust + [0, 0]
+        power_coeff = [0] + power_coeff + [0, 0]
+
+        power_curve_dict = {'power': power_coeff,
+                            'thrust': thrust,
+                            'wind_speed': wind_speed,
+                           }
+        my_wt = {'turbine_type': 'from_WRF_wrapper_WindTurbine',
+                 'generator_efficiency': 1.0,
+                 'hub_height': self.height,
+                 'pP': 1.88,
+                 'pT': 1.88,
+                 'rotor_diameter': self.diameter,
+                 'TSR': 8.0,
+                 'ref_density_cp_ct': 1.225,
+                 'power_thrust_table': power_curve_dict,
+                }
+        return my_wt
+
 class WindFarm:
     """
     Object representing a wind farm
