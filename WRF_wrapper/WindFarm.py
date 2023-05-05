@@ -296,3 +296,45 @@ class WindFarm:
             new_farm_df['lon'] = new_lon
             new_farm_df['lat'] = new_lat
         return WindFarm(new_farm_df)
+
+    def duplicate_with_rotation(self, angle):
+        """
+        Rotate the farm about its centroid, by specified angle
+        """
+        # Project to UTM
+        _, _, zone_num, zone_letter = utm.from_latlon(self.farm_df['lat'].mean(),
+                                                      self.farm_df['lon'].mean())
+        x, y, _, _ = utm.from_latlon(self.farm_df['lat'],
+                                     self.farm_df['lon'],
+                                     zone_num, zone_letter)
+        # Subtract centroid
+        x_centroid = x.mean()
+        y_centroid = y.mean()
+        x -= x_centroid
+        y -= y_centroid
+
+        # Rotate
+        complex_positions = x + 1j*y
+        complex_rotation = np.exp(1j*angle*np.pi/180)
+        complex_positions_rotated = complex_positions * complex_rotation
+
+        # New relative locations
+        x_new = np.real(complex_positions_rotated)
+        y_new = np.imag(complex_positions_rotated)
+
+        # New absolute positions
+        x_new += x_centroid
+        y_new += y_centroid
+
+        # Convert back to latlon
+        lat_new, lon_new = utm.to_latlon(x_new,
+                                         y_new,
+                                         zone_num,
+                                         zone_letter)
+
+        # Create new farm
+        new_farm_df = self.farm_df.copy()
+        new_farm_df['lat'] = lat_new
+        new_farm_df['lon'] = lon_new
+
+        return WindFarm(new_farm_df)
