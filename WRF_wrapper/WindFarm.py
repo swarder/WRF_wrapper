@@ -317,12 +317,21 @@ class WindFarm:
             dst = os.path.join(wrf_run_dir, f'wind-turbine-{new_id}.tbl')
             shutil.copy(src, dst)
 
-    def generate_convex_hull(self):
+    def generate_convex_hull(self, crs='latlon'):
         """
         Generate convex hull based on turbine locations (in lat-lon)
         """
         farm_latlons = self.farm_df[['lon', 'lat']].values
-        mpt = MultiPoint([Point(ll) for ll in farm_latlons])
+        if crs == 'latlon':
+            vertices = farm_latlons
+        elif crs.startswith('UTM'):
+            zone_num = int(crs[3:])
+            x, y, _, _ = utm.from_latlon(self.farm_df['lat'],
+                                         self.farm_df['lon'],
+                                         force_zone_number=zone_num,
+                                         force_zone_letter='N')
+            vertices = np.stack([x, y], axis=1)
+        mpt = MultiPoint([Point(ll) for ll in vertices])
         return mpt.convex_hull
 
     def duplicate_with_perturbation(self, ptb, crs='latlon'):
