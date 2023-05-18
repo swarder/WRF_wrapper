@@ -10,6 +10,18 @@ import py_wake.wind_turbines
 
 DATA_PATH = pkg_resources.resource_filename('WRF_wrapper', 'data/')
 
+def parse_turbine_spacing(turbine_spacing, wind_turbine, return_density=False):
+    if not isinstance(turbine_spacing, list):
+        turbine_spacing = [turbine_spacing, turbine_spacing]
+    parsed_spacings = []
+    for ts in turbine_spacing:
+        if isinstance(ts, str):
+            assert ts.endswith('D')
+            parsed_spacings.append(float(ts[:-1]) * wind_turbine.diameter)
+        else:
+            parsed_spacings.append(ts)
+    return parsed_spacings
+
 class WindTurbine:
     """
     Object representing a wind turbine
@@ -156,15 +168,7 @@ class WindFarm:
         """
         if not layout == 'grid':
             raise NotImplemtedError
-        if not isinstance(turbine_spacing, list):
-            turbine_spacing = [turbine_spacing, turbine_spacing]
-
-        turbine = WindTurbine.from_type_id(type_id)
-        for i in range(2):
-            if isinstance(turbine_spacing[i], str):
-                # Assume of the form '7D', meaning spacing is 7 turbine diameters
-                assert turbine_spacing[i][-1] == 'D'
-                turbine_spacing[i] = turbine.diameter * float(turbine_spacing[i][:-1])
+        turbine_spacing = parse_turbine_spacing(turbine_spacing, WindTurbine.from_type_id(type_id))
 
         lease_area_points = np.array(geometry['coordinates'][0])
         x_farm, y_farm, zone_num, zone_let = utm.from_latlon(lease_area_points[:,1].mean(), lease_area_points[:,0].mean())
@@ -230,6 +234,54 @@ class WindFarm:
         vertices_latlon = np.stack(utm.to_latlon(vertices_utm[:,0], vertices_utm[:,1], zone_num, zone_let), axis=-1)
         geometry = {'type': 'Polygon', 'coordinates': [vertices_latlon[:,::-1]]}
         return cls.from_geometry(geometry, layout, type_id, turbine_spacing, grid_alignment)
+
+    @classmethod
+    def from_random_polygon(cls, centroid_latlon, approx_area=None, approx_ic=None, num_vertices=None, layout='grid', type_id=6, turbine_spacing=['10D', '4D'], grid_alignment=90, random_seed=None):
+        """
+        Create WindFarm object within a polygon at specified centroid, and with verticies at the specified polar coordinates
+        """
+        if random_seed is not None:
+            np.random.seed(random_seed)
+        if num_vertices is None:
+            # Either 3 or 4 sides
+            num_vertices = np.random.randint(3, 5)
+        if approx_area is None:
+            assert approx_ic is not None
+            turbine = WindTurbine.from_type_id(type_id)
+
+            turbine_spacing = parse_turbine_spacing(turbine_spacing, turbine, return_density=True)
+            density = 1 / np.prod(turbine_spacing)
+            turbine_power = turbine.nominal_power
+            power_density = turbine_power * turbine_density
+            approx_area = approx_ic / power_density
+
+        centroid_x, centroid_y, zone_num, zone_let = utm.from_latlon(centroid_latlon[0], centroid_latlon[1])
+        centroid_xy = np.array([centroid_x, centroid_y])
+        # Random polygon vertex radii and polar angles
+        polar_radii = np.random.uniform(0.5, 1.5, num_vertices)
+        polar_angles = [np.random.uniform(i*360/num_vertices, (i+1)*360/num_vertices) for i in range(num_vertices)]
+
+        # Generate initial vertices
+        vertices_utm = np.array([(r * np.cos(phi*np.pi/180), r * np.sin(phi*np.pi/180)) for r, phi in zip(polar_radii, polar_angles)])
+
+        # Calculate current area
+        polygon_area = 0.5 * np.abs(np.dot(vertices_utm[:,0],np.roll(vertices_utm[:,1],1))-np.dot(vertices_utm[:,1],np.roll(vertices_utm[:,0],1)))
+
+        # Rescale to match target area, and add required centroid location
+        rescale_factor = np.sqrt(approx_area / polygon_area)
+        vertices_utm = vertices_utm * rescale_factor + centroid_xy[None,:]
+
+        # Convert to latlon coordinates
+        vertices_latlon = np.stack(utm.to_latlon(vertices_utm[:,0], vertices_utm[:,1], zone_num, zone_let), axis=-1)
+
+        # Construct polygon
+        geometry = {'type': 'Polygon', 'coordinates': [vertices_latlon[:,::-1]]}
+
+        farm = cls.from_geometry(geometry, layout, type_id, turbine_spacing, grid_alignment)
+
+        # Rotate by random angle
+        rotation_angle = np.random.uniform(0, 360)
+        return farm.duplicate_with_rotation(rotation_angle)
 
     def __add__(self, o):
         """
