@@ -340,6 +340,8 @@ class WindFarm:
         if crs == 'latlon', perturbation coordates are latlon
         Otherwise, assume crs specifies a utm zone
         """
+        if ptb == [0, 0]:
+            return WindFarm(self.farm_df)
         new_farm_df = self.farm_df.copy()
         if crs == 'latlon':
             new_farm_df['lon'] += ptb[0]
@@ -356,6 +358,8 @@ class WindFarm:
                                              zone_num, 'N', strict=False)
             new_farm_df['lon'] = new_lon
             new_farm_df['lat'] = new_lat
+        else:
+            raise NotImplemtedError
         return WindFarm(new_farm_df)
 
     def duplicate_with_rotation(self, angle):
