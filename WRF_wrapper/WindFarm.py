@@ -298,6 +298,15 @@ class WindFarm:
         """
         return self.__add__(o)
 
+    def __eq__(self, other):
+        """
+        Overload equality, to enable comparison of two farms
+        """
+        if isinstance(other, WindFarm):
+            comp_cols = ['lon', 'lat', 'type_id']
+            return self.farm_df[comp_cols].equals(other.farm_df[comp_cols])
+        return False
+
     def save(self, wrf_run_dir):
         """
         Save farm to CSV
