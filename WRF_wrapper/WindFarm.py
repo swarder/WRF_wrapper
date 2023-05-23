@@ -340,7 +340,7 @@ class WindFarm:
         if crs == 'latlon', perturbation coordates are latlon
         Otherwise, assume crs specifies a utm zone
         """
-        if ptb == [0, 0]:
+        if np.allclose(ptb, [0, 0]):
             return WindFarm(self.farm_df)
         new_farm_df = self.farm_df.copy()
         if crs == 'latlon':
