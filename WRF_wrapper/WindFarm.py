@@ -102,10 +102,11 @@ class WindFarm:
     """
     Object representing a wind farm
     """
-    def __init__(self, farm_df):
+    def __init__(self, farm_df, name=None):
         # farm_df should be a pandas dataframe with columns lon, lat, type_id
         self.farm_df = farm_df
         self.boundary_polygon = self.generate_convex_hull()
+        self.name = name
 
     @classmethod
     def from_template(cls, template_file=None, template_id=None, farm_lon=None, farm_lat=None, type_id=6):
@@ -290,7 +291,9 @@ class WindFarm:
         if o == 0:
             return self
         else:
-            return WindFarm(pd.concat([self.farm_df, o.farm_df], ignore_index=True))
+            summed_farm = WindFarm(pd.concat([self.farm_df, o.farm_df], ignore_index=True))
+            summed_farm.name = self.name
+            return summed_farm
 
     def __radd__(self, o):
         """

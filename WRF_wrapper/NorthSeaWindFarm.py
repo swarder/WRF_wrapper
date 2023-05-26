@@ -58,5 +58,6 @@ class NorthSeaWindFarm(WindFarm.WindFarm):
             n = farm.farm_df.shape[0]
         # If too many turbines, sample down to required number
         farm.farm_df = farm.farm_df.sample(int(num_required_turbines), random_state=0)
+        farm.name = lease_area_row['Name']
 
         return farm
