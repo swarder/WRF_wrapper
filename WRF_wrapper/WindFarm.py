@@ -353,7 +353,7 @@ class WindFarm:
         Otherwise, assume crs specifies a utm zone
         """
         if np.allclose(ptb, [0, 0]):
-            return WindFarm(self.farm_df)
+            return WindFarm(self.farm_df, name=self.name)
         new_farm_df = self.farm_df.copy()
         if crs == 'latlon':
             new_farm_df['lon'] += ptb[0]
@@ -372,7 +372,7 @@ class WindFarm:
             new_farm_df['lat'] = new_lat
         else:
             raise NotImplemtedError
-        return WindFarm(new_farm_df)
+        return WindFarm(new_farm_df, name=self.name)
 
     def duplicate_with_rotation(self, angle):
         """
@@ -414,4 +414,4 @@ class WindFarm:
         new_farm_df['lat'] = lat_new
         new_farm_df['lon'] = lon_new
 
-        return WindFarm(new_farm_df)
+        return WindFarm(new_farm_df, name=self.name)
