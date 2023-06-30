@@ -2,3 +2,5 @@ fiona
 shapely
 utm
 py_wake
+netCDF4
+pandas
