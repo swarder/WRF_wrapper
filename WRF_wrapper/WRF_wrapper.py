@@ -20,6 +20,13 @@ config_defaults = {'interval_seconds': 10800,
                    'w_damping': 0,
                    'epssm': 0.1,
                    'feedback': 0,
+                   'max_dom': 2,
+                   'd03_grid_ratio': None,
+                   'd03_dt_ratio': None,
+                   'd03_i_parent_start': None,
+                   'd03_j_parent_start': None,
+                   'd03_e_we': None,
+                   'd03_e_sn': None,
                    }
 
 domain_presets = {
@@ -58,6 +65,8 @@ class WRF_wrapper:
         self.config_dict = {**config_defaults, **domain_dict, **config_dict}
 
         self.config_dict['dx_d02'] = self.config_dict['dx'] // self.config_dict['d02_grid_ratio']
+        if self.config_dict['max_dom'] > 2:
+            self.config_dict['dx_d03'] = self.config_dict['dx_d02'] // self.config_dict['d03_grid_ratio']
 
         assert 'WPS_path' in self.config_dict.keys()
         assert 'WRF_path' in self.config_dict.keys()
@@ -86,7 +95,13 @@ class WRF_wrapper:
         """
         Save WPS config file to specified filename
         """
-        config_file_string = WPS_namelist_template.template.format(**self.config_dict)
+        if self.config_dict['max_dom'] == 2:
+            template = WPS_namelist_template.template
+        elif self.config_dict['max_dom'] == 3:
+            template = WPS_namelist_template.template_3_domains
+        else:
+            raise NotImplemtedError
+        config_file_string = template.format(**self.config_dict)
         if filename is None:
             filename = os.path.join(self.working_directory, 'WPS/namelist.wps')
         f = open(filename, 'w')
@@ -97,7 +112,13 @@ class WRF_wrapper:
         """
         Save WRF config file to specified filename
         """
-        config_file_string = WRF_namelist_template.template.format(**self.config_dict)
+        if self.config_dict['max_dom'] == 2:
+            template = WRF_namelist_template.template
+        elif self.config_dict['max_dom'] == 3:
+            template = WRF_namelist_template.template_3_domains
+        else:
+            raise NotImplemtedError
+        config_file_string = template.format(**self.config_dict)
         if filename is None:
             filename = os.path.join(self.working_directory, 'WRF/test/em_real/namelist.input')
         f = open(filename, 'w')
@@ -106,10 +127,9 @@ class WRF_wrapper:
 
         # Add extra io files
         io_str = r'+:h:0:RMOL' # Add RMOL as output variable to stream 0
-        io_filename_d01 = os.path.join(self.working_directory, 'WRF/test/em_real/io_file_d01.txt')
-        io_filename_d02 = os.path.join(self.working_directory, 'WRF/test/em_real/io_file_d02.txt')
-        for filename in [io_filename_d01, io_filename_d02]:
-            f = open(filename, 'w')
+        for i in range(self.config_dict['max_dom']):
+            io_filename = os.path.join(self.working_directory, f'WRF/test/em_real/io_file_d0{i+1}.txt')
+            f = open(io_filename, 'w')
             f.write(io_str)
             f.close()
 
