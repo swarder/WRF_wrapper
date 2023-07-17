@@ -27,6 +27,15 @@ config_defaults = {'interval_seconds': 10800,
                    'd03_j_parent_start': None,
                    'd03_e_we': None,
                    'd03_e_sn': None,
+                   'd01_radt': 18,
+                   'd02_radt': 6,
+                   'd03_radt': 2,
+                   'd01_bl_mynn_tkebudget': 0,
+                   'd02_bl_mynn_tkebudget': 1,
+                   'd03_bl_mynn_tkebudget': 1,
+                   'd01_diff_6th_factor': 0.06,
+                   'd02_diff_6th_factor': 0.1,
+                   'd03_diff_6th_factor': 0.1,
                    }
 
 domain_presets = {
