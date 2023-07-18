@@ -261,7 +261,7 @@ template_3_domains = \
     ensdim = 144,
     sf_urban_physics = 0, 0,
     bl_mynn_tkeadvect = .true., .true., .true.,
-    windfarm_opt = 0, {wind_turbines_int}, {wind_turbines_int},
+    windfarm_opt = 0, 0, {wind_turbines_int},
     windfarm_tke_factor = 0.25,
 /
 
