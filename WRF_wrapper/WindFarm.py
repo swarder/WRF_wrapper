@@ -415,3 +415,14 @@ class WindFarm:
         new_farm_df['lon'] = lon_new
 
         return WindFarm(new_farm_df, name=self.name)
+
+    def get_utm(self, zone_num=31, zone_letter='N'):
+        """
+        Add utm_x and utm_y columns
+        """
+        x, y, _, _ = utm.from_latlon(self.farm_df['lat'],
+                                     self.farm_df['lon'],
+                                     zone_num, zone_letter)
+        self.farm_df['utm_x'] = x
+        self.farm_df['utm_y'] = y
+        return x, y
