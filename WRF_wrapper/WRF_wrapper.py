@@ -273,25 +273,59 @@ class WRF_wrapper:
 
             dout.setncatts(din.__dict__)
             for name, dimension in din.dimensions.items():
-                if name in ['bottom_top', 'bottom_top_stag'] and max_z_levels is not None:
+                if name == 'bottom_top_stag':
+                    dout.createDimension(name, max_z_levels+1)
+                elif name == 'bottom_top':
                     dout.createDimension(name, max_z_levels)
                 else:
                     dout.createDimension(name, (len(dimension) if not dimension.isunlimited() else None))
 
             for name, variable in din.variables.items():
                 if name in variables_list or name in ['XLAT', 'XLONG']:
-                    z_dim = None
-                    for z_name in ['bottom_top', 'bottom_top_stag']:
-                        if z_name in variable.dimensions:
-                            z_dim = variable.dimensions.index(z_name)
-                            break
-                    if (z_dim is not None) and (max_z_levels is not None):
-                        data = din[name][:].take(range(max_z_levels), axis=z_dim)
-                    else:
-                        data = din[name][:]
+                    data = din[name][:]
+                    
+                    # Truncate z dimension
+                    if 'bottom_top' in variable.dimensions:
+                        z_dim = variable.dimensions.index('bottom_top')
+                        data = data.take(range(max_z_levels), axis=z_dim)
+                    if 'bottom_top_stag' in variable.dimensions:
+                        z_stag_dim = variable.dimensions.index('bottom_top_stag')
+                        data = data.take(range(max_z_levels+1), axis=z_stag_dim)
+                    
+                    # Create variable
                     x = dout.createVariable(name, variable.datatype, variable.dimensions)
                     dout[name][:] = data
                     dout[name].setncatts(din[name].__dict__)
+                    
+                    contains_staggered_dim = 'bottom_top_stag' in variable.dimensions or \
+                                             'west_east_stag' in variable.dimensions or \
+                                             'south_north_stag' in variable.dimensions
+                    if contains_staggered_dim:
+                        data_destag = data
+                        dims_destag = list(variable.dimensions)
+                        # De-stagger as necessary
+                        if 'west_east_stag' in variable.dimensions:
+                            x_stag_dim = variable.dimensions.index('west_east_stag')
+                            data_destag = 0.5 * (data_destag.take(range(0, data_destag.shape[x_stag_dim]-1), axis=x_stag_dim) +
+                                                data_destag.take(range(1, data_destag.shape[x_stag_dim]), axis=x_stag_dim))
+                            dims_destag[x_stag_dim] = 'west_east'
+                        if 'south_north_stag' in variable.dimensions:
+                            y_stag_dim = variable.dimensions.index('south_north_stag')
+                            data_destag = 0.5 * (data_destag.take(range(0, data_destag.shape[y_stag_dim]-1), axis=y_stag_dim) +
+                                                data_destag.take(range(1, data_destag.shape[y_stag_dim]), axis=y_stag_dim))
+                            dims_destag[y_stag_dim] = 'south_north'
+                        if 'bottom_top_stag' in variable.dimensions:
+                            z_stag_dim = variable.dimensions.index('bottom_top_stag')
+                            data_destag = 0.5 * (data_destag.take(range(0, data_destag.shape[z_stag_dim]-1), axis=z_stag_dim) +
+                                                data_destag.take(range(1, data_destag.shape[z_stag_dim]), axis=z_stag_dim))
+                            dims_destag[z_stag_dim] = 'bottom_top'
+                        
+                        # Create variable
+                        name_destag = name + '_destag'
+                        x = dout.createVariable(name_destag, variable.datatype, dims_destag)
+                        dout[name_destag][:] = data_destag
+                        dout[name_destag].setncatts(din[name].__dict__)
+                        dout[name_destag].stagger = ''
 
             din.close()
             dout.close()
