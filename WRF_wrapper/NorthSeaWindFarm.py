@@ -36,15 +36,18 @@ class NorthSeaWindFarm(WindFarm.WindFarm):
         lease_area_area = lease_area_row.area * 1e6
         installed_capacity = lease_area_row['IC_numeric']
         num_turbines = lease_area_row['num_turbines_numeric']
-        if np.isnan(num_turbines):
+        if np.isnan(num_turbines) or np.isnan(installed_capacity):
             print('No num_turbines info, assuming 10 MW turbines')
             turbine_target_power = 10
         else:
             turbine_target_power = installed_capacity / num_turbines
         type_id = standard_turbine_type_ids[np.argmin(np.abs(standard_turbine_powers - turbine_target_power))]
-
         turbine_power = WindFarm.WindTurbine.from_type_id(type_id).nominal_power
-        num_required_turbines = installed_capacity / turbine_power
+        if np.isnan(installed_capacity):
+            print('No IC info, assuming num_turbines and standard_turbine_powers provided are correct')
+            num_required_turbines = num_turbines
+        else:
+            num_required_turbines = installed_capacity / turbine_power
         approx_turbine_separation = np.sqrt(lease_area_area / num_required_turbines)
 
         farm = cls.from_geometry(lease_geometry_latlon, 'grid', type_id, approx_turbine_separation, 90)
