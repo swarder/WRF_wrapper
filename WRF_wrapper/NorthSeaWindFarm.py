@@ -20,7 +20,7 @@ canonical_turbine_type_ids = ['plausible-3.6', 'plausible-6.0', '10', '15']
 
 class NorthSeaWindFarm(WindFarm.WindFarm):
     @classmethod
-    def from_lease_area(cls, lease_area_id, standard_turbine_powers=None, standard_turbine_type_ids=None):
+    def from_lease_area(cls, lease_area_id, standard_turbine_powers=None, standard_turbine_type_ids=None, lease_area_df=lease_area_df, lease_area_polygons_file=lease_area_polygons_file):
         """
         Create WindFarm object within specified lease_area_id, using turbines of specified type_id, and specified IC
         Maximum turbine spacing is found which is sufficient to achieve the specified IC within the lease area
