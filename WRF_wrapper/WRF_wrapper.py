@@ -254,7 +254,7 @@ class WRF_wrapper:
         else:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./wrf.exe > wrf.out", shell=True)
 
-    def extract_outputs(self, out_path, domains=None, variables_list=['U', 'V', 'TKE_PBL', 'POWER'], max_z_levels=None):
+    def extract_outputs(self, out_path, domains=None, variables_list=['U', 'V', 'TKE_PBL', 'POWER'], max_z_levels=None, keep_staggered=True):
         """
         Extract specified variables and save each field in a newly generated netcdf file for each domain
         """
@@ -292,14 +292,16 @@ class WRF_wrapper:
                         z_stag_dim = variable.dimensions.index('bottom_top_stag')
                         data = data.take(range(max_z_levels+1), axis=z_stag_dim)
                     
-                    # Create variable
-                    x = dout.createVariable(name, variable.datatype, variable.dimensions)
-                    dout[name][:] = data
-                    dout[name].setncatts(din[name].__dict__)
-                    
                     contains_staggered_dim = 'bottom_top_stag' in variable.dimensions or \
                                              'west_east_stag' in variable.dimensions or \
                                              'south_north_stag' in variable.dimensions
+                    
+                    if (not contains_staggered_dim) or keep_staggered:
+                        # Create variable
+                        x = dout.createVariable(name, variable.datatype, variable.dimensions)
+                        dout[name][:] = data
+                        dout[name].setncatts(din[name].__dict__)
+                    
                     if contains_staggered_dim:
                         data_destag = data
                         dims_destag = list(variable.dimensions)
