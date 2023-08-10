@@ -426,3 +426,13 @@ class WindFarm:
         self.farm_df['utm_x'] = x
         self.farm_df['utm_y'] = y
         return x, y
+    
+    def calculate_IC(self):
+        """
+        Calculate total installed capacity
+        """
+        unique_turb_types = self.farm_df.type_id.unique()
+        turb_powers = [WindTurbine.from_type_id(type_id).nominal_power for type_id in unique_turb_types]
+        turb_dict = dict(zip(unique_turb_types, turb_powers))
+        all_powers = self.farm_df.type_id.replace(turb_dict)
+        return sum(all_powers)
