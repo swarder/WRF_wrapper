@@ -98,7 +98,7 @@ class WRF_wrapper:
         self.model_timestamps_without_pfiles = [ts for ts in self.model_timestamps if ts.strftime('FILE:%Y-%m-%d_%H') not in existing_pfile_names]
 
         self.parallel = parallel
-        if self.parallel:
+        if self.parallel == True:
             self.hostfile_path = os.path.join(self.working_directory, 'WRF/test/em_real/hostfile')
 
     def save_WPS_config_to_file(self, filename=None):
@@ -169,7 +169,7 @@ class WRF_wrapper:
             all_farms = sum(self.config_dict['wind_farms'])
             all_farms.save(os.path.join(self.working_directory, 'WRF/test/em_real/'))
 
-        if self.parallel:
+        if self.parallel == True:
             subprocess.check_call(f"cat $PBS_NODEFILE > {self.hostfile_path}", shell=True)
 
     def run_geogrid(self):
@@ -236,8 +236,10 @@ class WRF_wrapper:
 
         st = os.stat('real.exe')
         os.chmod('real.exe', st.st_mode | stat.S_IEXEC)
-        if self.parallel:
+        if self.parallel == True:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec --hostfile {self.hostfile_path} ./real.exe > real.out", shell=True)
+        elif isinstance(self.parallel, int):
+            subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec -n {self.parallel} ./real.exe > real.out", shell=True)
         else:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./real.exe > real.out", shell=True)
 
@@ -249,8 +251,10 @@ class WRF_wrapper:
         os.chdir(os.path.join(self.working_directory, 'WRF/test/em_real'))
         st = os.stat('wrf.exe')
         os.chmod('wrf.exe', st.st_mode | stat.S_IEXEC)
-        if self.parallel:
+        if self.parallel == True:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec --hostfile {self.hostfile_path} ./wrf.exe > wrf.out", shell=True)
+        elif isinstance(self.parallel, int):
+            subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec -n {self.parallel} ./wrf.exe > wrf.out", shell=True)
         else:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./wrf.exe > wrf.out", shell=True)
 
