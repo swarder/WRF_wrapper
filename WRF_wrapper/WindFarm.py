@@ -123,7 +123,7 @@ class WindFarm:
         if farm_lon is not None:
             farm_df['lon'] = farm_df['lon'] - farm_df['lon'].mean() + farm_lon
         farm_df['type_id'] = type_id
-        return cls(farm_df)
+        return cls(farm_df, name=template_id)
 
     @classmethod
     def from_installed_capacity(cls, installed_capacity=5, layout='grid', farm_lon=0, farm_lat=0, type_id=6, turbine_spacing='5D'):
