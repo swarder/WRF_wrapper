@@ -222,7 +222,9 @@ class WindFarm:
         """
         lease_polygon = fiona.open(os.path.join(DATA_PATH, f'lease_areas/{lease_area_name}/lease_area.shp')).next()
         geometry = lease_polygon['geometry']
-        return cls.from_geometry(geometry, layout, type_id, turbine_spacing, grid_alignment)
+        farm = cls.from_geometry(geometry, layout, type_id, turbine_spacing, grid_alignment)
+        farm.name = lease_area_name
+        return farm
 
     @classmethod
     def from_polygon(cls, centroid_latlon, polar_angles, polar_radii, layout='grid', type_id=6, turbine_spacing=['10D', '4D'], grid_alignment=90):
