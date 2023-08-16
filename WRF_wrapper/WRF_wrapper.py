@@ -238,7 +238,7 @@ class WRF_wrapper:
         os.chmod('real.exe', st.st_mode | stat.S_IEXEC)
         if self.parallel == True:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec --hostfile {self.hostfile_path} ./real.exe > real.out", shell=True)
-        elif isinstance(self.parallel, int):
+        elif self.parallel > 0:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec -n {self.parallel} ./real.exe > real.out", shell=True)
         else:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./real.exe > real.out", shell=True)
@@ -253,7 +253,7 @@ class WRF_wrapper:
         os.chmod('wrf.exe', st.st_mode | stat.S_IEXEC)
         if self.parallel == True:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec --hostfile {self.hostfile_path} ./wrf.exe > wrf.out", shell=True)
-        elif isinstance(self.parallel, int):
+        elif self.parallel > 0:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec -n {self.parallel} ./wrf.exe > wrf.out", shell=True)
         else:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./wrf.exe > wrf.out", shell=True)
