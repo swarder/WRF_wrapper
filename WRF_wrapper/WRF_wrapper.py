@@ -110,7 +110,7 @@ class WRF_wrapper:
         elif self.config_dict['max_dom'] == 3:
             template = WPS_namelist_template.template_3_domains
         else:
-            raise NotImplemtedError
+            raise NotImplementedError
         config_file_string = template.format(**self.config_dict)
         if filename is None:
             filename = os.path.join(self.working_directory, 'WPS/namelist.wps')
@@ -127,7 +127,7 @@ class WRF_wrapper:
         elif self.config_dict['max_dom'] == 3:
             template = WRF_namelist_template.template_3_domains
         else:
-            raise NotImplemtedError
+            raise NotImplementedError
         config_file_string = template.format(**self.config_dict)
         if filename is None:
             filename = os.path.join(self.working_directory, 'WRF/test/em_real/namelist.input')
