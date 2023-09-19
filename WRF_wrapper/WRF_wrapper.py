@@ -64,7 +64,7 @@ class WRF_wrapper:
     """
     Class for running WPS and WRF
     """
-    def __init__(self, working_directory, config_dict, domain_config=None, parallel=False):
+    def __init__(self, working_directory, config_dict, domain_config=None, parallel=False, node_list=None):
         self.working_directory = working_directory
 
         # Combine config dicts
@@ -97,9 +97,13 @@ class WRF_wrapper:
         existing_pfile_names = os.listdir(self.config_dict['pfile_data_dir'])
         self.model_timestamps_without_pfiles = [ts for ts in self.model_timestamps if ts.strftime('FILE:%Y-%m-%d_%H') not in existing_pfile_names]
 
+        # Set up parallelisation
+        if node_list is not None:
+            parallel = True
         self.parallel = parallel
         if self.parallel == True:
             self.hostfile_path = os.path.join(self.working_directory, 'WRF/test/em_real/hostfile')
+            self.node_list = node_list
 
     def save_WPS_config_to_file(self, filename=None):
         """
@@ -170,7 +174,15 @@ class WRF_wrapper:
             all_farms.save(os.path.join(self.working_directory, 'WRF/test/em_real/'))
 
         if self.parallel == True:
-            subprocess.check_call(f"cat $PBS_NODEFILE > {self.hostfile_path}", shell=True)
+            with open(os.getenv('PBS_NODEFILE')) as f:
+                nodes = [f.strip() for f in f.readlines()]
+            if self.node_list is None:
+                node_list = range(len(nodes))
+            else:
+                node_list = self.node_list
+            nodes = [nodes[i] for i in node_list]
+            with open(self.hostfile_path, 'w') as f:
+                f.write('\n'.join(nodes))
 
     def run_geogrid(self):
         """
