@@ -241,12 +241,7 @@ class WRF_wrapper:
         os.chdir(os.path.join(self.working_directory, 'WPS'))
         st = os.stat('metgrid.exe')
         os.chmod('metgrid.exe', st.st_mode | stat.S_IEXEC)
-        if self.parallel == True:
-            subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.config_dict['pfile_data_dir']},$TMPDIR:$TMPDIR,{self.working_directory} {self.config_dict['wrf_img_path']} mpiexec --hostfile {self.hostfile_path} ./metgrid.exe > metgrid.out", shell=True)
-        elif self.parallel > 0:
-            subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.config_dict['pfile_data_dir']},$TMPDIR:$TMPDIR {self.config_dict['wrf_img_path']} mpiexec -n {self.parallel} ./metgrid.exe > metgrid.out", shell=True)
-        else:
-            subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.config_dict['pfile_data_dir']},$TMPDIR:$TMPDIR {self.config_dict['wrf_img_path']} ./metgrid.exe > metgrid.out", shell=True)
+        subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.config_dict['pfile_data_dir']},$TMPDIR:$TMPDIR {self.config_dict['wrf_img_path']} ./metgrid.exe > metgrid.out", shell=True)
 
     def run_real(self):
         """
