@@ -192,12 +192,7 @@ class WRF_wrapper:
         os.chdir(os.path.join(self.working_directory, 'WPS'))
         st = os.stat('geogrid.exe')
         os.chmod('geogrid.exe', st.st_mode | stat.S_IEXEC)
-        if self.parallel == True:
-            subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.config_dict['geog_data_path']},$TMPDIR:$TMPDIR,{self.working_directory} {self.config_dict['wrf_img_path']} mpiexec --hostfile {self.hostfile_path} ./geogrid.exe > geogrid.out", shell=True)
-        elif self.parallel > 0:
-            subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.config_dict['geog_data_path']},$TMPDIR:$TMPDIR {self.config_dict['wrf_img_path']} mpiexec -n {self.parallel} ./geogrid.exe > geogrid.out", shell=True)
-        else:
-            subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.config_dict['geog_data_path']},$TMPDIR:$TMPDIR {self.config_dict['wrf_img_path']} ./geogrid.exe > geogrid.out", shell=True)
+        subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.config_dict['geog_data_path']},$TMPDIR:$TMPDIR {self.config_dict['wrf_img_path']} ./geogrid.exe > geogrid.out", shell=True)
 
     def download_era(self):
         """
