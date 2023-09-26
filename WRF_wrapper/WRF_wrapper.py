@@ -64,7 +64,7 @@ class WRF_wrapper:
     """
     Class for running WPS and WRF
     """
-    def __init__(self, working_directory, config_dict, domain_config=None, parallel=False, node_list=None):
+    def __init__(self, working_directory, config_dict, domain_config=None, parallel=False):
         self.working_directory = working_directory
 
         # Combine config dicts
@@ -98,12 +98,15 @@ class WRF_wrapper:
         self.model_timestamps_without_pfiles = [ts for ts in self.model_timestamps if ts.strftime('FILE:%Y-%m-%d_%H') not in existing_pfile_names]
 
         # Set up parallelisation
-        if node_list is not None:
-            parallel = True
-        self.parallel = parallel
-        if self.parallel == True:
-            self.hostfile_path = os.path.join(self.working_directory, 'WRF/test/em_real/hostfile')
-            self.node_list = node_list
+        if parallel:
+            if os.getenv('PBS_NODEFILE') is not None:
+                self.parallel_mode = 'PBS'
+                self.hostfile_path = os.path.join(self.working_directory, 'WRF/test/em_real/hostfile')
+            else:
+                self.parallel_mode = 'local'
+            self.n_procs = parallel
+        else:
+            self.parallel_mode = None
 
     def save_WPS_config_to_file(self, filename=None):
         """
@@ -173,14 +176,11 @@ class WRF_wrapper:
             all_farms = sum(self.config_dict['wind_farms'])
             all_farms.save(os.path.join(self.working_directory, 'WRF/test/em_real/'))
 
-        if self.parallel == True:
+        if self.parallel_mode == 'PBS':
             with open(os.getenv('PBS_NODEFILE')) as f:
                 nodes = [f.strip() for f in f.readlines()]
-            if self.node_list is None:
-                node_list = range(len(nodes))
-            else:
-                node_list = self.node_list
-            nodes = [nodes[i] for i in node_list]
+            assert len(set(nodes)) == 1, 'PBS_NODEFILE contains multiple nodes'
+            nodes = nodes[:1] * self.n_procs
             with open(self.hostfile_path, 'w') as f:
                 f.write('\n'.join(nodes))
 
@@ -248,10 +248,10 @@ class WRF_wrapper:
 
         st = os.stat('real.exe')
         os.chmod('real.exe', st.st_mode | stat.S_IEXEC)
-        if self.parallel == True:
+        if self.parallel_mode == 'PBS':
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec --hostfile {self.hostfile_path} ./real.exe > real.out", shell=True)
-        elif self.parallel > 0:
-            subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec -n {self.parallel} ./real.exe > real.out", shell=True)
+        elif self.parallel_mode == 'local':
+            subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec -n {self.n_procs} ./real.exe > real.out", shell=True)
         else:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./real.exe > real.out", shell=True)
 
@@ -263,10 +263,10 @@ class WRF_wrapper:
         os.chdir(os.path.join(self.working_directory, 'WRF/test/em_real'))
         st = os.stat('wrf.exe')
         os.chmod('wrf.exe', st.st_mode | stat.S_IEXEC)
-        if self.parallel == True:
+        if self.parallel_mode == 'PBS':
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec --hostfile {self.hostfile_path} ./wrf.exe > wrf.out", shell=True)
-        elif self.parallel > 0:
-            subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec -n {self.parallel} ./wrf.exe > wrf.out", shell=True)
+        elif self.parallel_mode == 'local':
+            subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} mpiexec -n {self.n_procs} ./wrf.exe > wrf.out", shell=True)
         else:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./wrf.exe > wrf.out", shell=True)
 
