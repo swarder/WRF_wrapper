@@ -168,7 +168,7 @@ class WindFarm:
         Generate WindFarm object from a given geometry
         """
         if not layout == 'grid':
-            raise NotImplemtedError
+            raise NotImplementedError
         turbine_spacing = parse_turbine_spacing(turbine_spacing, WindTurbine.from_type_id(type_id))
 
         lease_area_points = np.array(geometry['coordinates'][0])
@@ -224,6 +224,7 @@ class WindFarm:
         geometry = lease_polygon['geometry']
         farm = cls.from_geometry(geometry, layout, type_id, turbine_spacing, grid_alignment)
         farm.name = lease_area_name
+        farm.boundary_polygon = shape(lease_polygon['geometry'])
         return farm
 
     @classmethod
