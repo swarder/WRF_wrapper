@@ -137,6 +137,7 @@ template = \
 
 &dynamics
     w_damping = {w_damping},
+    w_crit_cfl = {w_crit_cfl},
     diff_opt = 1,
     km_opt = 4,
     diff_6th_opt = 2, 2,
@@ -310,6 +311,7 @@ template_3_domains = \
 
 &dynamics
     w_damping = {w_damping},
+    w_crit_cfl = {w_crit_cfl},
     diff_opt = 1,
     km_opt = 4,
     diff_6th_opt = 2, 2, 2,
