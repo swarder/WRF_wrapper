@@ -425,7 +425,37 @@ class WindFarm:
         new_farm_df['lat'] = lat_new
         new_farm_df['lon'] = lon_new
 
-        return WindFarm(new_farm_df, name=self.name)
+        new_farm = WindFarm(new_farm_df, name=self.name)
+
+        # Update boundary polygon
+        boundary_polygon_points = np.array(self.boundary_polygon.exterior.coords)
+        boundary_points_x, boundary_points_y, _, _ = utm.from_latlon(
+            boundary_polygon_points[:,1],
+            boundary_polygon_points[:,0],
+            zone_num,
+            zone_letter
+            )
+        boundary_points_x -= x_centroid
+        boundary_points_y -= y_centroid
+
+        complex_positions = boundary_points_x + 1j*boundary_points_y
+        complex_rotation = np.exp(1j*angle*np.pi/180)
+        complex_positions_rotated = complex_positions * complex_rotation
+
+        boundary_points_x = np.real(complex_positions_rotated) + x_centroid
+        boundary_points_y = np.imag(complex_positions_rotated) + y_centroid
+
+        boundary_points_lat, boundary_points_lon = utm.to_latlon(
+            boundary_points_x,
+            boundary_points_y,
+            zone_num,
+            zone_letter
+        )
+        boundary_points_latlon = np.stack([boundary_points_lon, boundary_points_lat], axis=1)
+        new_boundary_polygon = boundary_polygon_utm = Polygon(boundary_points_latlon)
+        new_farm.boundary_polygon = new_boundary_polygon
+
+        return new_farm
 
     def get_utm(self, zone_num=31, zone_letter='N'):
         """
