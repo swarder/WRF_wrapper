@@ -6,7 +6,9 @@ import pkg_resources
 import fiona
 import utm
 from shapely.geometry import shape, Point, Polygon, MultiPoint
+from shapely.affinity import translate
 import py_wake.wind_turbines
+import copy
 
 DATA_PATH = pkg_resources.resource_filename('WRF_wrapper', 'data/')
 
@@ -356,7 +358,7 @@ class WindFarm:
         Otherwise, assume crs specifies a utm zone
         """
         if np.allclose(ptb, [0, 0]):
-            return WindFarm(self.farm_df, name=self.name)
+            return copy.deepcopy(self)
         new_farm_df = self.farm_df.copy()
         if crs == 'latlon':
             new_farm_df['lon'] += ptb[0]
@@ -374,8 +376,14 @@ class WindFarm:
             new_farm_df['lon'] = new_lon
             new_farm_df['lat'] = new_lat
         else:
-            raise NotImplemtedError
-        return WindFarm(new_farm_df, name=self.name)
+            raise NotImplementedError
+        new_farm = WindFarm(new_farm_df, name=self.name)
+
+        # Translate existing boundary_polygon to avoid having to use convex hull
+        translation_vector = new_farm.farm_df[['lon', 'lat']].mean().values - self.farm_df[['lon', 'lat']].mean().values
+        new_farm.boundary_polygon = translate(self.boundary_polygon, *translation_vector)
+        
+        return new_farm
 
     def duplicate_with_rotation(self, angle):
         """
