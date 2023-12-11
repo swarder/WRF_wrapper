@@ -20,7 +20,7 @@ canonical_turbine_type_ids = ['plausible-3.6', 'plausible-6.0', '10', '15']
 
 class NorthSeaWindFarm(WindFarm.WindFarm):
     @classmethod
-    def from_lease_area(cls, lease_area_id, standard_turbine_powers=None, standard_turbine_type_ids=None, lease_area_df=lease_area_df, lease_area_polygons_file=lease_area_polygons_file):
+    def from_lease_area(cls, lease_area_id, standard_turbine_powers=None, standard_turbine_type_ids=None, lease_area_df=lease_area_df, lease_area_polygons_file=lease_area_polygons_file, stagger=False, use_bug_fix=False):
         """
         Create WindFarm object within specified lease_area_id, using turbines of specified type_id, and specified IC
         Maximum turbine spacing is found which is sufficient to achieve the specified IC within the lease area
@@ -50,14 +50,30 @@ class NorthSeaWindFarm(WindFarm.WindFarm):
             num_required_turbines = installed_capacity / turbine_power
         approx_turbine_separation = np.sqrt(lease_area_area / num_required_turbines)
 
-        farm = cls.from_geometry(lease_geometry_latlon, 'grid', type_id, approx_turbine_separation, 90)
+        farm = cls.from_geometry(
+            lease_geometry_latlon,
+            'grid',
+            type_id,
+            approx_turbine_separation,
+            90,
+            stagger=stagger,
+            use_bug_fix=use_bug_fix
+            )
         n = farm.farm_df.shape[0]
 
         # Likely to be too few turbines initially
         while n < num_required_turbines:
             #print(approx_turbine_separation)
             approx_turbine_separation -= 25
-            farm = cls.from_geometry(lease_geometry_latlon, 'grid', type_id, approx_turbine_separation, 90)
+            farm = cls.from_geometry(
+                lease_geometry_latlon,
+                'grid',
+                type_id,
+                approx_turbine_separation,
+                90,
+                stagger=stagger,
+                use_bug_fix=use_bug_fix
+                )
             n = farm.farm_df.shape[0]
         # If too many turbines, sample down to required number
         farm.farm_df = farm.farm_df.sample(int(num_required_turbines), random_state=0)
