@@ -165,15 +165,18 @@ class WindFarm:
         return cls(farm_df)
 
     @classmethod
-    def from_geometry(cls, geometry, layout, type_id, turbine_spacing, grid_alignment):
+    def from_geometry(cls, geometry, layout, type_id, turbine_spacing, grid_alignment, stagger=False, use_bug_fix=False):
         """
         Generate WindFarm object from a given geometry
+        use_bug_fix: if True, use a bug fix to ensure that [0,0] is included in candidate turbine grid and farm centre doesn't double-count any points
         """
         if not layout == 'grid':
             raise NotImplementedError
         turbine_spacing = parse_turbine_spacing(turbine_spacing, WindTurbine.from_type_id(type_id))
 
         lease_area_points = np.array(geometry['coordinates'][0])
+        if use_bug_fix and np.allclose(lease_area_points[0], lease_area_points[-1]):
+            lease_area_points = lease_area_points[:-1]
         x_farm, y_farm, zone_num, zone_let = utm.from_latlon(lease_area_points[:,1].mean(), lease_area_points[:,0].mean())
 
         lease_area_points_utm = [tuple(utm.from_latlon(p[1], p[0], force_zone_number=zone_num, force_zone_letter=zone_let)[:2]) for p in lease_area_points]
@@ -181,8 +184,14 @@ class WindFarm:
         lease_area_area = shape(lease_geometry_utm).area
         n = np.sqrt(lease_area_area) / min(turbine_spacing)
 
+        if use_bug_fix:
+            # Ensure that [0,0] is included in candidate turbine grid
+            n = int(n) + 1
+
         # Generate grid around that point, and rotate
-        yy, xx = np.meshgrid(np.arange(-5*n, 5*n), np.arange(-5*n, 5*n))
+        yy, xx = np.meshgrid(np.arange(-5*n, 5*n, dtype=np.float32), np.arange(-5*n, 5*n, dtype=np.float32))
+        if stagger:
+            xx += 0.5 * (yy % 2)
         xx = xx * turbine_spacing[0]
         yy = yy * turbine_spacing[1]
         turbine_xy_complex = (xx + 1j * yy) * np.exp(1j * (90 - grid_alignment) * np.pi/180)
