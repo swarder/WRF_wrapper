@@ -486,3 +486,11 @@ class WindFarm:
         turb_dict = dict(zip(unique_turb_types, turb_powers))
         all_powers = self.farm_df.type_id.replace(turb_dict)
         return sum(all_powers)
+    
+    def set_new_location(self, new_lat, new_lon):
+        """
+        Shift location to new latlon
+        """
+        self.farm_df['lat'] = self.farm_df.lat - self.farm_df.lat.mean() + new_lat
+        self.farm_df['lon'] = self.farm_df.lon - self.farm_df.lon.mean() + new_lon
+        return self
