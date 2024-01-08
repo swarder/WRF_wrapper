@@ -323,7 +323,7 @@ class WRF_wrapper:
         else:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./wrf.exe > wrf.out", shell=True)
 
-    def extract_outputs(self, out_path, domains=None, variables_list=['U', 'V', 'TKE_PBL', 'POWER'], max_z_levels=None, keep_staggered=True):
+    def extract_outputs(self, out_path, domains=None, variables_list=['U', 'V', 'TKE_PBL', 'POWER'], max_z_levels=None, t_freq=6, keep_staggered=True):
         """
         Extract specified variables and save each field in a newly generated netcdf file for each domain
         """
@@ -346,11 +346,13 @@ class WRF_wrapper:
                     dout.createDimension(name, max_z_levels+1)
                 elif name == 'bottom_top':
                     dout.createDimension(name, max_z_levels)
+                elif name == 'Time':
+                    dout.createDimension(name, data.dimensions['Time'].size//t_freq)
                 else:
                     dout.createDimension(name, (len(dimension) if not dimension.isunlimited() else None))
 
             for name, variable in din.variables.items():
-                if name in variables_list or name in ['XLAT', 'XLONG']:
+                if (name in variables_list) or (name in ['XLAT', 'XLONG']):
                     data = din[name][:]
                     
                     # Truncate z dimension
@@ -360,6 +362,17 @@ class WRF_wrapper:
                     if 'bottom_top_stag' in variable.dimensions:
                         z_stag_dim = variable.dimensions.index('bottom_top_stag')
                         data = data.take(range(max_z_levels+1), axis=z_stag_dim)
+                    
+                    # Reduce time frequency
+                    if 'Time' in variable.dimensions:
+                        t_dim = variable.dimensions.index('Time')
+                        data = data.take(range(0, data.shape[t_dim], t_freq), axis=t_dim)
+
+                        # Add timestamp variable
+                        if 'timestamp' not in dout.variables.keys():
+                            timestamps = range(0, data.shape[t_dim], t_freq)
+                            dout.createVariable('timestamp', int, 'Time')
+                            dout['timestamp'][:] = timestamps
                     
                     contains_staggered_dim = 'bottom_top_stag' in variable.dimensions or \
                                              'west_east_stag' in variable.dimensions or \
