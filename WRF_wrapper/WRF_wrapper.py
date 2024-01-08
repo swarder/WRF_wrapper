@@ -323,7 +323,7 @@ class WRF_wrapper:
         else:
             subprocess.check_call(f"singularity exec -H {os.getcwd()} --bind {self.working_directory} {self.config_dict['wrf_img_path']} ./wrf.exe > wrf.out", shell=True)
 
-    def extract_outputs(self, out_path, domains=None, variables_list=['U', 'V', 'TKE_PBL', 'POWER'], max_z_levels=None, t_freq=6, keep_staggered=True):
+    def extract_outputs(self, out_path, domains=None, variables_list=['U', 'V', 'TKE_PBL', 'POWER'], max_z_levels=None, t_freq=1, keep_staggered=True):
         """
         Extract specified variables and save each field in a newly generated netcdf file for each domain
         """
@@ -347,7 +347,7 @@ class WRF_wrapper:
                 elif name == 'bottom_top':
                     dout.createDimension(name, max_z_levels)
                 elif name == 'Time':
-                    dout.createDimension(name, data.dimensions['Time'].size//t_freq)
+                    dout.createDimension(name, din.dimensions['Time'].size//t_freq+1)
                 else:
                     dout.createDimension(name, (len(dimension) if not dimension.isunlimited() else None))
 
@@ -366,11 +366,11 @@ class WRF_wrapper:
                     # Reduce time frequency
                     if 'Time' in variable.dimensions:
                         t_dim = variable.dimensions.index('Time')
-                        data = data.take(range(0, data.shape[t_dim], t_freq), axis=t_dim)
+                        timestamps = range(0, data.shape[t_dim], t_freq)
+                        data = data.take(timestamps, axis=t_dim)
 
                         # Add timestamp variable
                         if 'timestamp' not in dout.variables.keys():
-                            timestamps = range(0, data.shape[t_dim], t_freq)
                             dout.createVariable('timestamp', int, 'Time')
                             dout['timestamp'][:] = timestamps
                     
