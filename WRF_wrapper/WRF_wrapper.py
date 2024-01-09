@@ -11,6 +11,7 @@ import stat
 import subprocess
 import datetime
 import glob
+import math
 from netCDF4 import Dataset
 
 config_defaults = {'interval_seconds': 10800,
@@ -347,7 +348,7 @@ class WRF_wrapper:
                 elif name == 'bottom_top':
                     dout.createDimension(name, max_z_levels)
                 elif name == 'Time':
-                    dout.createDimension(name, din.dimensions['Time'].size//t_freq+1)
+                    dout.createDimension(name, math.ceil(din.dimensions['Time'].size//t_freq))
                 else:
                     dout.createDimension(name, (len(dimension) if not dimension.isunlimited() else None))
 
