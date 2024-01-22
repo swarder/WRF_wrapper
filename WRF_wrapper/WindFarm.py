@@ -357,6 +357,8 @@ class WindFarm:
                                          force_zone_number=zone_num,
                                          force_zone_letter='N')
             vertices = np.stack([x, y], axis=1)
+        else:
+            raise NotImplementedError
         mpt = MultiPoint([Point(ll) for ll in vertices])
         return mpt.convex_hull
 

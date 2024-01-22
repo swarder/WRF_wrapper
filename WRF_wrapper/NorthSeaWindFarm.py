@@ -20,7 +20,7 @@ canonical_turbine_type_ids = ['plausible-3.6', 'plausible-6.0', '10', '15']
 
 class NorthSeaWindFarm(WindFarm.WindFarm):
     @classmethod
-    def from_lease_area(cls, lease_area_id, standard_turbine_powers=None, standard_turbine_type_ids=None, lease_area_df=lease_area_df, lease_area_polygons_file=lease_area_polygons_file, stagger=False, use_bug_fix=False):
+    def from_lease_area(cls, lease_area_id, standard_turbine_powers=None, standard_turbine_type_ids=None, lease_area_df=lease_area_df, lease_area_polygons_file=lease_area_polygons_file, stagger=False, use_bug_fix=False, verbose=True):
         """
         Create WindFarm object within specified lease_area_id, using turbines of specified type_id, and specified IC
         Maximum turbine spacing is found which is sufficient to achieve the specified IC within the lease area
@@ -37,7 +37,8 @@ class NorthSeaWindFarm(WindFarm.WindFarm):
         installed_capacity = lease_area_row['IC_numeric']
         num_turbines = lease_area_row['num_turbines_numeric']
         if np.isnan(num_turbines) or np.isnan(installed_capacity):
-            print('No num_turbines info, assuming 10 MW turbines')
+            if verbose:
+                print('No num_turbines info, assuming 10 MW turbines')
             turbine_target_power = 10
         else:
             turbine_target_power = installed_capacity / num_turbines
