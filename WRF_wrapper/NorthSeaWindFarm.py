@@ -30,7 +30,15 @@ class NorthSeaWindFarm(WindFarm.WindFarm):
             standard_turbine_type_ids = canonical_turbine_type_ids
         standard_turbine_powers = np.array(standard_turbine_powers)
 
-        lease_geometry_latlon = lease_area_polygons_file[lease_area_id]['geometry']
+        # This class is re-used for other regional farm lease areas e.g. IrishSeaWindFarm
+        # For these other areas, the lease_area_polygons_file and lease_area_df have different IDs
+        # lease_area_polygons_file is always indexed from 0, whereas lease_area_df could start anywhere
+        id_to_ix = dict([
+            [lease_area_polygons_file[k]['properties']['id'], k] for k in range(len(lease_area_polygons_file))
+        ])
+        if lease_area_id != id_to_ix[lease_area_id]:
+            print('Warning: lease_area_polygons_file and lease_area_df have different IDs')
+        lease_geometry_latlon = lease_area_polygons_file[id_to_ix[lease_area_id]]['geometry']
 
         lease_area_row = lease_area_df.loc[lease_area_df.ID == lease_area_id].iloc[0]
         lease_area_area = lease_area_row.area * 1e6
