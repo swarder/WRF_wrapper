@@ -42,6 +42,9 @@ class WindTurbine:
     def generate_power_curve_func(self):
         return lambda x: np.interp(x, self.power_curve.wind_speed, self.power_curve.power)
 
+    def generate_thrust_curve_func(self):
+        return lambda x: np.interp(x, self.power_curve.wind_speed, self.power_curve.thrust_coeff)
+
     @classmethod
     def from_type_id(cls, type_id):
         tbl_file = os.path.join(DATA_PATH, f'power_curves/wind-turbine-{type_id}.tbl')
