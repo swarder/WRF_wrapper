@@ -91,6 +91,19 @@ config_defaults = {'interval_seconds': 10800,
                    'cudt_d01': 5,
                    'cudt_d02': 0,
                    'cudt_d03': 0,
+                   'eta_levels': [1.0, 0.998621, 0.997244, 0.995868, 0.994495, 0.993123,
+                                  0.991753, 0.990385, 0.989018, 0.987653, 0.986291, 0.984929,
+                                  0.98357, 0.982213, 0.980857, 0.979503, 0.978151, 0.9768,
+                                  0.975451, 0.974104, 0.972759, 0.971415, 0.970073, 0.968732,
+                                  0.967393, 0.96472, 0.96112, 0.9571, 0.95237, 0.94668, 0.9398,
+                                  0.93147, 0.9214, 0.90924, 0.89461, 0.87705, 0.85602, 0.83095,
+                                  0.80121, 0.76612, 0.72503, 0.67736, 0.62293, 0.56264, 0.49949,
+                                  0.43795, 0.38119, 0.32951, 0.28247, 0.23965, 0.20067, 0.16519,
+                                  0.13289, 0.1055587, 0.0830446, 0.063567, 0.0442697, 0.0280384,
+                                  0.0152337, 0.00892152, 0.00297004, 0.0],
+                    'bl_mynn_mixlength': 2,
+                    'fractional_seaice': 0,
+                    'seaice_threshold': 100,
                    }
 
 domain_presets = {
@@ -131,6 +144,8 @@ class WRF_wrapper:
         self.config_dict['dx_d02'] = self.config_dict['dx'] // self.config_dict['d02_grid_ratio']
         if self.config_dict['max_dom'] > 2:
             self.config_dict['dx_d03'] = self.config_dict['dx_d02'] // self.config_dict['d03_grid_ratio']
+        
+        self.config_dict['eta_levels'] = ', '.join([str(x) for x in self.config_dict['eta_levels']])
 
         assert 'WPS_path' in self.config_dict.keys()
         assert 'WRF_path' in self.config_dict.keys()
