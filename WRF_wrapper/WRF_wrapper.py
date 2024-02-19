@@ -104,6 +104,7 @@ config_defaults = {'interval_seconds': 10800,
                     'bl_mynn_mixlength': 2,
                     'fractional_seaice': 0,
                     'seaice_threshold': 100,
+                    'num_land_cat': 21,
                    }
 
 domain_presets = {
