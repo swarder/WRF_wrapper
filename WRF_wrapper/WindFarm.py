@@ -229,16 +229,27 @@ class WindFarm:
         return farm
 
     @classmethod
-    def from_lease_area(cls, lease_area_name, layout='grid', type_id=6, turbine_spacing=['10D', '4D'], grid_alignment=90):
+    def from_shapefile(cls, shapefile_path, **kwargs):
         """
-        Create WindFarm object within specified lease_area_name, using turbines of specified type_id, and specified turbine_spacing
-        turbine_spacing can be a list, specifying spacing in two directions. First direction is in direction specified by grid_alignment, second direction is perpendicular
+        Load shapefile and pass to from_geometry method
         """
-        lease_polygon = fiona.open(os.path.join(DATA_PATH, f'lease_areas/{lease_area_name}/lease_area.shp')).next()
+        default_kwargs = dict(layout='grid', type_id=6, turbine_spacing=['10D', '4D'], grid_alignment=90)
+        kwargs = {**default_kwargs, **kwargs}
+
+        lease_polygon = next(iter(fiona.open(shapefile_path)))
         geometry = lease_polygon['geometry']
-        farm = cls.from_geometry(geometry, layout, type_id, turbine_spacing, grid_alignment)
-        farm.name = lease_area_name
+        farm = cls.from_geometry(geometry, **kwargs)
         farm.boundary_polygon = shape(lease_polygon['geometry'])
+        return farm
+
+    @classmethod
+    def from_lease_area(cls, lease_area_name, **kwargs):
+        """
+        Create WindFarm object from one of the named shapefiles provided within WRF_wrapper
+        """
+        shapefile_path = os.path.join(DATA_PATH, f'lease_areas/{lease_area_name}/lease_area.shp')
+        farm = cls.from_shapefile(shapefile_path, **kwargs)
+        farm.name = lease_area_name
         return farm
 
     @classmethod
