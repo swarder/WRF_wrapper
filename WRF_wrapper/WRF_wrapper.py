@@ -146,6 +146,7 @@ class WRF_wrapper:
         if self.config_dict['max_dom'] > 2:
             self.config_dict['dx_d03'] = self.config_dict['dx_d02'] // self.config_dict['d03_grid_ratio']
         
+        self.config_dict['e_vert'] = len(self.config_dict['eta_levels'])
         self.config_dict['eta_levels'] = ', '.join([str(x) for x in self.config_dict['eta_levels']])
 
         assert 'WPS_path' in self.config_dict.keys()
