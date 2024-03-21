@@ -132,7 +132,7 @@ class WRF_wrapper:
     """
     Class for running WPS and WRF
     """
-    def __init__(self, working_directory, config_dict, domain_config=None, parallel=False):
+    def __init__(self, working_directory, config_dict, domain_config=None, parallel=False, wrf_namelist_exclude=None):
         self.working_directory = working_directory
 
         # Combine config dicts
@@ -178,6 +178,8 @@ class WRF_wrapper:
         else:
             self.parallel_mode = None
 
+        self.wrf_namelist_exclude = wrf_namelist_exclude
+
     def save_WPS_config_to_file(self, filename=None):
         """
         Save WPS config file to specified filename
@@ -206,6 +208,10 @@ class WRF_wrapper:
         else:
             raise NotImplementedError
         config_file_string = template.format(**self.config_dict)
+        if self.wrf_namelist_exclude is not None:
+            # Exclude specified keywords from namelist file, e.g. if they didn't exist in the version of WRF being used
+            for key in self.wrf_namelist_exclude:
+                config_file_string = config_file_string.replace(f'{key} =', f'!{key} =')
         if filename is None:
             filename = os.path.join(self.working_directory, 'WRF/test/em_real/namelist.input')
         f = open(filename, 'w')
