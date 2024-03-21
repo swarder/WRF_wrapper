@@ -212,7 +212,7 @@ class WRF_wrapper:
         if self.wrf_namelist_exclude is not None:
             # Exclude specified keywords from namelist file, e.g. if they didn't exist in the version of WRF being used
             for key in self.wrf_namelist_exclude:
-                config_file_string = config_file_string.replace(f'{key} =', f'!{key} =')
+                config_file_string = config_file_string.replace(f'    {key} =', f'    !{key} =')
         if filename is None:
             filename = os.path.join(self.working_directory, 'WRF/test/em_real/namelist.input')
         f = open(filename, 'w')
