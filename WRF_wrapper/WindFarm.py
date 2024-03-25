@@ -312,11 +312,13 @@ class WindFarm:
         rotation_angle = np.random.uniform(0, 360)
         return farm.duplicate_with_rotation(rotation_angle)
     
-    def from_wrf_output(cls, wrf_run_dir):
+    def from_wrf_output(cls, wrf_run_dir, type_id=None):
         """
         Create WindFarm object from WRF output directory
         """
         farm_df = pd.read_csv(os.path.join(wrf_run_dir, 'windturbines.txt'), sep=' ', names=['lat', 'lon', 'type_id'])
+        if type_id is not None:
+            farm_df['type_id'] = type_id
         return cls(farm_df)
 
     def __add__(self, o):
