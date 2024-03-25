@@ -312,6 +312,7 @@ class WindFarm:
         rotation_angle = np.random.uniform(0, 360)
         return farm.duplicate_with_rotation(rotation_angle)
     
+    @classmethod
     def from_wrf_output(cls, wrf_run_dir, type_id=None):
         """
         Create WindFarm object from WRF output directory
