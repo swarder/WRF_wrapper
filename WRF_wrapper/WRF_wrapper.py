@@ -189,9 +189,15 @@ class WRF_wrapper:
         Save WPS config file to specified filename
         """
         if self.config_dict['max_dom'] == 2:
-            template = WPS_namelist_template.template
+            if self.pair:
+                raise NotImplementedError
+            else:
+                template = WPS_namelist_template.template
         elif self.config_dict['max_dom'] == 3:
-            template = WPS_namelist_template.template_3_domains
+            if self.pair:
+                template = WPS_namelist_template.template_3_domains_pair
+            else:
+                template = WPS_namelist_template.template_3_domains
         else:
             raise NotImplementedError
         config_file_string = template.format(**self.config_dict)
