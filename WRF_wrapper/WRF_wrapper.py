@@ -132,7 +132,7 @@ class WRF_wrapper:
     """
     Class for running WPS and WRF
     """
-    def __init__(self, working_directory, config_dict, domain_config=None, parallel=False, wrf_namelist_exclude=None):
+    def __init__(self, working_directory, config_dict, domain_config=None, parallel=False, wrf_namelist_exclude=None, pair=False):
         self.working_directory = working_directory
 
         # Combine config dicts
@@ -181,6 +181,9 @@ class WRF_wrapper:
 
         self.wrf_namelist_exclude = wrf_namelist_exclude
 
+        # Flag for whether to run domain config with and without farms simultaneously
+        self.pair = pair
+
     def save_WPS_config_to_file(self, filename=None):
         """
         Save WPS config file to specified filename
@@ -203,9 +206,15 @@ class WRF_wrapper:
         Save WRF config file to specified filename
         """
         if self.config_dict['max_dom'] == 2:
-            template = WRF_namelist_template.template
+            if self.pair:
+                raise NotImplementedError
+            else:
+                template = WRF_namelist_template.template
         elif self.config_dict['max_dom'] == 3:
-            template = WRF_namelist_template.template_3_domains
+            if self.pair:
+                template = WRF_namelist_template.template_3_domains_pair
+            else:
+                template = WRF_namelist_template.template_3_domains
         else:
             raise NotImplementedError
         config_file_string = template.format(**self.config_dict)
