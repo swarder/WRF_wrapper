@@ -40,10 +40,10 @@ class WindTurbine:
         self.power_curve = pd.read_csv(tbl_file, sep=' ', skiprows=2, names=['wind_speed', 'thrust_coeff', 'power'])
 
     def generate_power_curve_func(self):
-        return lambda x: np.interp(x, self.power_curve.wind_speed, self.power_curve.power)
+        return lambda x: np.interp(x, self.power_curve.wind_speed, self.power_curve.power, left=0, right=0)
 
     def generate_thrust_curve_func(self):
-        return lambda x: np.interp(x, self.power_curve.wind_speed, self.power_curve.thrust_coeff)
+        return lambda x: np.interp(x, self.power_curve.wind_speed, self.power_curve.thrust_coeff, left=self.power_curve.thrust_coeff.values[-1], right=None)
 
     @classmethod
     def from_type_id(cls, type_id):
