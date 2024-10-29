@@ -5,10 +5,13 @@ import os
 import pkg_resources
 import fiona
 import utm
-from shapely.geometry import shape, Point, Polygon, MultiPoint
+from shapely.geometry import shape, Point, Polygon, MultiPoint, LineString
 from shapely.affinity import translate
+from shapely.ops import polygonize, nearest_points
 import py_wake.wind_turbines
 import copy
+from scipy.spatial import Voronoi
+import geopandas as gpd
 
 DATA_PATH = pkg_resources.resource_filename('WRF_wrapper', 'data/')
 
@@ -496,7 +499,7 @@ class WindFarm:
         """
         Add utm_x and utm_y columns
         """
-        x, y, _, _ = utm.from_latlon(self.farm_df['lat'],
+        x, y, n, _ = utm.from_latlon(self.farm_df['lat'],
                                      self.farm_df['lon'],
                                      zone_num, zone_letter)
         self.farm_df['utm_x'] = x
@@ -525,3 +528,61 @@ class WindFarm:
         else:
             self.farm_df = farm_df_new
             return self
+    
+    @classmethod
+    def expand_to_polygon(cls, farm, polygon=None, crs=None):
+        """
+        Expand turbines out towards edges/corners of given polygon
+        """
+        if polygon is None:
+            polygon = farm.boundary_polygon
+        farm_df = farm.farm_df.copy()
+        if crs is None:
+            _, _, zone_num, zone_letter = utm.from_latlon(
+                farm_df.lat.mean(),
+                farm_df.lon.mean()
+            )
+        elif crs.startswith('UTM'):
+            zone_num = int(crs[3:])
+            zone_letter = 'N'
+        else:
+            raise NotImplementedError
+        
+        farm = cls(farm_df)
+        farm.get_utm(zone_num, zone_letter)
+
+        polygon_gdf = gpd.GeoDataFrame(index=[0], geometry=[polygon], crs="EPSG:4326")
+        polygon_gdf = polygon_gdf.to_crs(f'EPSG:326{zone_num}')
+        polygon_utm = polygon_gdf.geometry.iloc[0]
+
+        # Define an outer circle for the Voronoi tessellation
+        xy = farm.farm_df[['utm_x', 'utm_y']].values
+        max_r = np.linalg.norm(xy - xy.mean(axis=0)[None,:], axis=-1).max()
+        hull_xy = np.array(polygon_utm.exterior.coords.xy).T
+        max_hull_r = np.linalg.norm(hull_xy - xy.mean(axis=0)[None,:], axis=-1).max()
+        r_outer = 1.5 * max(max_r, max_hull_r)
+        xy_outer = np.array([
+            xy.mean(axis=0) + np.array([r_outer * np.cos(theta), r_outer * np.sin(theta)]) \
+                for theta in np.linspace(0, 2*np.pi, 200, endpoint=False)
+            ])
+        xy_combined = np.concatenate([xy, xy_outer], axis=0)
+
+        # Perform Voronoi tesselation
+        vor = Voronoi(points=xy_combined)
+        lines = [LineString(vor.vertices[line]) for line in vor.ridge_vertices if -1 not in line]
+        polys = polygonize(lines)
+        voronois = gpd.GeoDataFrame(geometry=gpd.GeoSeries(polys), crs=f'EPSG:326{zone_num}')
+
+        # Replace turbine locations with Voronoi cell centroids, moving any outside the polygon to the nearest point on the polygon
+        xy = voronois.geometry.apply(lambda g: nearest_points(polygon_utm, g.centroid)[0]).get_coordinates()[['x', 'y']].values
+
+        lat, lon = utm.to_latlon(xy[:,0], xy[:,1], zone_num, 'N')
+
+        farm_df['lon'] = lon
+        farm_df['lat'] = lat
+        farm_df['type_id'] = farm.farm_df['type_id']
+
+        farm = cls(farm_df[['lon', 'lat', 'type_id']])
+        farm.boundary_polygon = polygon
+
+        return farm
